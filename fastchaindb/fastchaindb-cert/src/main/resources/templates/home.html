@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>供应链金融区块链服务平台</title>
+    <% include("./layout/cssPart.html"){} %>
+</head>
+<body style="height: 100%;">
+
+<div style="min-height: 100%; margin-bottom: -30px">
+
+    <!---头部导航---->
+    <div class="layui-header">
+            <div class="layui-nav layui-nav-left" style="background-color: rgb(32, 33, 36)">
+                <div class="layui-nav-item" style="color:#d7d7d7; font-size: 26px; font-family: 'Lucida Grande'"><img src="assets/images/logo.png" class="layui-nav-img"/>供应链金融</div>
+            </div>
+            <ul class="layui-nav layui-layout-right" style="background-color: rgb(32, 33, 36)">
+                <li class="layui-nav-item layui-hide-xs" lay-unselect>
+                    <a ew-event="fullScreen" title="全屏"><i class="layui-icon layui-icon-screen-full"></i></a>
+                </li>
+                <li class="layui-nav-item"><a href="/login">登入</a></li>
+                <li class="layui-nav-item"><a href="/register">注册</a></li>
+            </ul>
+        </div>
+
+    <!--主要介绍-->
+    <div style="background: #211053; width: 100%; height: 50%">
+        <div class="layui-container">
+            <div class="layui-row">
+                <div class="layui-col-md7 layui-col-xs6 layui-col-sm6"><img src="assets/images/certchain.png" style="width: 65%;margin-top: 5%; margin-bottom:5%"></div>
+                <div class="layui-col-md5 layui-col-xs6 layui-col-sm6" style="width: 30%; height: auto; margin-bottom: 5%">
+                    <div style="color: #ffffff; font-size: 66px; font-family: 'Lucida Grande'; margin-top: 25%;">供应链金融公服平台</div>
+                    <div style="color: #e3effe; margin-top: 10%; font-family: 'Lucida Grande'; font-size: 21px" >打造国内最具规模的、最专业的</div>
+                    <div style="color: #e3effe; margin-top: 3%; font-size: 21px" >供应链金融公服平台</div>
+                    <a href="/certcheck" target="_blank" class="layui-btn layui-btn-lg layui-btn-radius layui-btn-normal" style="margin-top: 10%; border-radius: 8px">证 据 查 验</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!---统计展示--->
+    <div class="layui-container" style="margin-top: 3%;margin-bottom: 5%">
+        <div class="layui-row layui-col-space30">
+            <div class="layui-col-xs6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <img src="assets/images/block_height.png" style="height: 70px">
+                        <span class="lay-big-font" id="BlockHeight" style="color: #ff9600; position: absolute; right: 20px; top: 20px">19,666</span>
+                        <p>2020.02 至今<span class="pull-right">区块高度<i class="layui-icon layui-icon-chart"></i></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <img src="assets/images/storage.png" style="height: 70px">
+                        <span class="lay-big-font" id="SumFileNum" style="color: #4c5865; position: absolute; right: 20px; top: 20px">19,666</span>
+                        <p>2020.02 至今<span class="pull-right">存证数据量<i class="layui-icon layui-icon-file"></i></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <img src="assets/images/user_num.png" style="height: 70px">
+                        <span class="lay-big-font" id="sumUserNum" style="color: #db4b3e;position: absolute; right: 20px; top: 20px">19,666</span>
+                        <p>2020.02 至今<span class="pull-right">存证用户数<i class="layui-icon layui-icon-user"></i></span></p>
+                    </div>
+                </div>
+            </div>
+            <div class="layui-col-xs6 layui-col-md3">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <img src="assets/images/login_record.png" style="height: 70px">
+                        <span class="lay-big-font" id="LoginTotal" style="color: #00a699;position: absolute; right: 20px; top: 20px">19,666</span>
+                        <p>2019.05 至今<span class="pull-right">总计访问量<i class="layui-icon layui-icon-flag"></i></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="height: 30px"></div>
+</div>
+
+    <!-- 底部 -->
+    <div style="height: 30px; margin-top:-20px; text-align: center">
+        <div class="layui-footer">Copyright © 2020 SIAT All rights reserved.</div>
+    </div>
+
+    <!-- 手机屏幕遮罩层 -->
+    <div class="site-mobile-shade"></div>
+
+<% include("./layout/jsPart.html"){} %>
+<script type="text/javascript" src="assets/libs/layui/layui.js"></script>
+<!--link rel="stylesheet" type="text/css" href="assets/css/login.css"/-->
+<script>
+    layui.config({
+        base: 'module/'
+    }).use(['form','element','layer'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var element = layui.element;
+        var layer = layui.layer;
+    });
+
+    $("#LoginTotal").html("${loginTotal}");
+    $("#sumUserNum").html("${sumUserNum}");
+    $("#BlockHeight").html("${blockHeight}");
+    $("#SumFileNum").html("${sumFileNum}");
+
+</script>
+
+
+</body>
+</html>

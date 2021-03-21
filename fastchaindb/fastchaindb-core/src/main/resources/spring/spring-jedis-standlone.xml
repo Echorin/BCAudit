@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!--配置 jedis pool-->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<!-- 最大连接数 -->
+		<property name="maxTotal" value="200"/>
+		<!-- 最大空闲时间 -->
+		<property name="maxIdle" value="10"/>
+		<!-- 获得链接时的最大等待毫秒数，小于0：阻塞不确定时间，默认-1 -->
+		<property name="maxWaitMillis" value="5000"/>
+
+		<!--&lt;!&ndash; 每次最大连接数 &ndash;&gt;-->
+		<!--<property name="numTestsPerEvictionRun" value="1024"/>-->
+		<!--&lt;!&ndash; 释放扫描的扫描间隔 &ndash;&gt;-->
+		<!--<property name="timeBetweenEvictionRunsMillis" value="5000"/>-->
+		<!--&lt;!&ndash; 连接的最小空闲时间 &ndash;&gt;-->
+		<!--<property name="minEvictableIdleTimeMillis" value="1800000"/>-->
+		<!--&lt;!&ndash; 连接控歘按时间多久后释放，当空闲时间>该值且空闲连接>最大空闲连接数时直接释放 &ndash;&gt;-->
+		<!--<property name="softMinEvictableIdleTimeMillis" value="10000"/>-->
+		<!--&lt;!&ndash; 在获得链接的时候检查有效性，默认false &ndash;&gt;-->
+		<!--<property name="testOnBorrow" value="true"/>-->
+		<!--&lt;!&ndash; 在空闲时检查有效性，默认false &ndash;&gt;-->
+		<!--<property name="testWhileIdle" value="true"/>-->
+		<!--&lt;!&ndash; 连接耗尽时是否阻塞，false报异常，true阻塞超时 默认：true&ndash;&gt;-->
+		<!--<property name="blockWhenExhausted" value="false"/>-->
+	</bean>
+
+	<!--spring data redis -->
+	<bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<!-- #主机地址，默认：localhost -->
+		<property name="hostName" value="${redis.host}"/>
+		<!-- #主机地址，默认：localhost -->
+		<property name="port" value="${redis.port}"/>
+		<!-- #超时时间，默认：2000 -->
+		<property name="timeout" value="3000"/>
+		<!--&lt;!&ndash; #密码 &ndash;&gt;-->
+		<!--<property name="password" value=""/>-->
+		<!--&lt;!&ndash; #使用数据库的索引，0-15之间的数字，默认：0 &ndash;&gt;-->
+		<!--<property name="database" value="0"/>-->
+		<!--&lt;!&ndash; #是否使用连接池，默认true &ndash;&gt;-->
+		<!--<property name="usePool" value="true"/>-->
+		<!--可以通过构造注入或者Set注入两种方式-->
+		<property name="poolConfig" ref="jedisPoolConfig"/>
+	</bean>
+
+	<!--redisTemplate-->
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory"/>
+	</bean>
+
+</beans>

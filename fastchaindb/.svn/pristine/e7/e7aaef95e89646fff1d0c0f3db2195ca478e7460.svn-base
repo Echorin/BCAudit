@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Tables SqlSessionFactory="sqlSessionFactory">
+
+    <!-- OrderBy必须设置而且最好为主键，不然排序会乱  -->
+    <Table TitleName="测试" TableUrl="sysuser" TableName="sys_user" >
+        <Sql>select * from sys_user</Sql>
+        <FilterKey>username,nick_name</FilterKey>
+        <TotalKey>sum(user_id) as user_id</TotalKey>
+        <OrderBy>create_time desc</OrderBy>
+        <Filter>1=1</Filter>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:test</OpenForm>
+    </Table>
+
+    <Table TitleName="节点配置" TableName="fabric_config" TableUrl="fabricConfig" >
+        <Sql>select * from fabric_config</Sql>
+        <OrderBy>create_time desc</OrderBy>
+        <Filter>1=1</Filter>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:fabric_config</OpenForm>
+    </Table>
+
+
+
+
+</Tables>

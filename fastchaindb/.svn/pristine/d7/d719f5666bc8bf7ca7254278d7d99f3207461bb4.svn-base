@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oschain.fastchaindb.cert.dao.CertInfoMapper">
+
+    <select id="listCertInfoFile" resultType="com.oschain.fastchaindb.cert.dto.CertInfoFileDTO">
+        select a.id,a.file_tag,a.create_time,a.create_user,b.file_name,b.file_path,b.file_type,b.file_hash,b.transaction_id,c.block_hash,
+        b.id as cert_file_id
+        from cert_info a
+        left join cert_file b on a.sign_id=b.cert_sign_id
+        left join cert_block c on b.transaction_id=c.transaction_id
+        <where>
+            <if test="startDate != null">
+                AND a.create_time&gt;=#{startDate}
+            </if>
+            <if test="endDate != null">
+                AND a.create_time&lt;=#{endDate}
+            </if>
+        </where>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="getCertInfoFile" resultType="com.oschain.fastchaindb.cert.dto.CertInfoFileDTO">
+        select a.id,a.file_tag,a.create_time,a.create_user,b.file_name,b.file_path,b.file_type,b.file_hash,b.transaction_id,c.block_hash,
+        b.file_size,c.block_status,b.last_check_time,b.id as cert_file_id,b.file_id
+        from cert_info a
+        left join cert_file b on a.sign_id=b.cert_sign_id
+        left join cert_block c on b.transaction_id=c.transaction_id
+        where b.id=#{certFileId}
+    </select>
+
+</mapper>

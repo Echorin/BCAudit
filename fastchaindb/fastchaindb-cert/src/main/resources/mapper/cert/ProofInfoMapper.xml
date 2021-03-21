@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oschain.fastchaindb.cert.dao.ProofInfoMapper">
+
+    <select id="listProofInfoFile" resultType="com.oschain.fastchaindb.cert.dto.ProofInfoFileDTO" parameterType="Map">
+        select a.id,a.file_tag,a.create_time,a.create_user,b.cert_id,b.file_name,b.file_path,b.file_type,b.file_hash,b.transaction_id,c.block_hash, b.id as proof_file_id
+        from proof_info a
+        left join proof_file b on a.sign_id=b.cert_sign_id
+        left join proof_block c on b.transaction_id=c.transaction_id
+        <where>
+            <if test="keyword != null">
+                AND b.file_name like '%${keyword}%'
+            </if>
+            <if test="username != null">
+                AND a.create_user = '${username}'
+            </if>
+        </where>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="getProofInfoFile" resultType="com.oschain.fastchaindb.cert.dto.ProofInfoFileDTO">
+        select a.id,a.file_tag,a.create_time,a.create_user,a.cert_id,b.file_name,b.file_path,b.file_type,b.file_hash,b.transaction_id,c.block_hash,
+        b.file_size,c.block_status,b.last_check_time,b.id as proof_file_id,b.file_id
+        from proof_info a
+        left join proof_file b on a.sign_id=b.proof_sign_id
+        left join proof_block c on b.transaction_id=c.transaction_id
+        where b.id=#{proofFileId}
+    </select>
+
+</mapper>

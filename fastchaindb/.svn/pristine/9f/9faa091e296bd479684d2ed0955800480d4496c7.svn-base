@@ -1,0 +1,32 @@
+<style>
+    #loginBar
+    {
+        background-color: #347ebc;
+        line-height: 40px;
+    }
+    #loginBar a
+    {
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    #loginBar span
+    {
+        color: #fff;
+    }
+    .w960
+    {
+        width: 960px;
+        margin: 0 auto;
+        text-align: right;
+    }
+
+</style>
+
+<header id="header">
+    <div id="loginBar">
+        <div class="w960">
+            <a href="/login">登录</a> <span class="sp">|</span> <a href="#">注册</a>
+        </div>
+    </div>
+</header>

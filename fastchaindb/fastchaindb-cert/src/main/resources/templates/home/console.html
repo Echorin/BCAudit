@@ -1,0 +1,279 @@
+<div class="layui-row layui-col-space15">
+    <div class="layui-col-xs6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                区块高度
+            </div>
+            <div class="layui-card-body">
+                <p class="lay-big-font" id="BlockHeight" style="color: #ff9600">19,666</p>
+                <p>2020.02 至今<span class="pull-right">区块高度<i class="layui-icon layui-icon-chart"></i></span></p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                容量<span class="layui-badge layui-bg-black pull-right">月</span>
+            </div>
+            <div class="layui-card-body">
+                <p class="lay-big-font" id="SumFileSize" style="color: #4c5865">19,666</p>
+                <p>2020.02 至今<span class="pull-right">已用容量<i class="layui-icon layui-icon-file"></i></span></p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                下载量<span class="layui-badge layui-bg-green pull-right">周</span>
+            </div>
+            <div class="layui-card-body">
+                <p class="lay-big-font" id="DownloadTotal" style="color: #db4b3e">19,666</p>
+                <p>2020.02 至今<span class="pull-right">总计下载量<i class="layui-icon layui-icon-download-circle"></i></span></p>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-xs6 layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                访问量<span class="layui-badge layui-bg-orange pull-right">月</span>
+            </div>
+            <div class="layui-card-body">
+                <p class="lay-big-font" id="LoginTotal" style="color: #00a699">19,666</p>
+                <p>2019.05 至今<span class="pull-right">总计访问量<i class="layui-icon layui-icon-flag"></i></span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="layui-row layui-col-space15">
+
+    <div class="layui-col-lg8 layui-col-md7">
+        <div class="layui-card">
+            <div class="layui-card-header">平台介绍</div>
+            <div class="layui-card-body">
+                <div id="main" style="width: auto; height: 500px"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layui-col-lg4 layui-col-md5">
+        <div class="layui-card">
+            <div class="layui-card-header">后台框架</div>
+            <div class="layui-card-body">
+                <table class="layui-table layui-text">
+                    <colgroup>
+                        <col width="100">
+                        <col>
+                    </colgroup>
+                    <tbody>
+                    <tr>
+                        <td>版本号</td>
+                        <td>V 1.0</td>
+                    </tr>
+                    <tr>
+                        <td>更新时间</td>
+                        <td>2020.02</td>
+                    </tr>
+                    <tr>
+                        <td>核心框架</td>
+                        <td>Spring、Spring MVC、Spring Boot</td>
+                    </tr>
+                    <tr>
+                        <td>持久层</td>
+                        <td>MyBatis、Druid、<a href="http://mp.baomidou.com" target="_blank">MyBatis-Plus</a></td>
+                    </tr>
+                    <tr>
+                        <td>权限框架</td>
+                        <td>Apache Shiro(Redis)</td>
+                    </tr>
+                    <tr>
+                        <td>数据库</td>
+                        <td>
+                            MySql
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>中间件</td>
+                        <td>
+                            Redis、RokectMQ
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>区块链</td>
+                        <td>
+                            Fabric
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>前端UI</td>
+                        <td>
+                            LayerUI、Beetl、Echarts
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>核心框架</td>
+                        <td><a href="http://www.layui.com/" target="_blank">layui-v2.3.0</a></td>
+                    </tr>
+                    <tr>
+                        <td>路由框架</td>
+                        <td><a href="https://github.com/itorr/q.js" target="_blank">q.js</a></td>
+                    </tr>
+                    <tr>
+                        <td>mvvm框架</td>
+                        <td><a href="https://gitee.com/pandarrr/pandyle" target="_blank">pandyle.js</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="${ctxPath }/assets/dist/echarts.js"></script>
+<script>
+    <!--    -->
+    layui.use(['carousel', 'element','echarts',], function () {
+        var carousel = layui.carousel;
+        var device = layui.device;
+        var echarts = layui.echarts;
+        var myCharts = echarts.init(document.getElementById('main')); // 要绘制图表的盒子dom;
+        var element = layui.element;
+        var table = layui.table;
+        var month= [];
+        var downloadTrend = [];
+        var loginTrend =[];
+        var fileAdditionTrend = [];
+        var downloadRecordList = '${downloadRecordList}';
+        var loginRecordList = '${loginRecordList}';
+        var fileSizeAdditionalRecord = '${fileSizeAdditionalRecord}';
+
+
+        if(downloadRecordList != '') {
+            downloadRecordList = JSON.parse(downloadRecordList);
+            for (var p in downloadRecordList) {
+                month.push(downloadRecordList[p].month);
+                downloadTrend.push(downloadRecordList[p].count);
+            }
+        }
+
+        if(loginRecordList != '') {
+            loginRecordList = JSON.parse(loginRecordList);
+            for (var p in loginRecordList) {
+                loginTrend.push(loginRecordList[p].count);
+            }
+        }
+
+        if(fileSizeAdditionalRecord != '') {
+            fileSizeAdditionalRecord = JSON.parse(fileSizeAdditionalRecord);
+            for (var p in fileSizeAdditionalRecord) {
+                fileAdditionTrend.push(fileSizeAdditionalRecord[p].count);
+                console.log(fileSizeAdditionalRecord[p].count);
+            }
+        }
+
+        var option = {
+            title: {
+                text: '系统流量趋势图'
+            },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: {
+                    type: 'cross',
+                    label: {
+                        backgroundColor: '#6a7985'
+                    }
+                }
+            },
+            legend: {
+                data: ['下载量', '存储增量(MB)','访问量']
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {}
+                }
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            xAxis: [
+                {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: month
+                }
+            ],
+            yAxis: [
+                {
+                    type: 'value'
+                }
+            ],
+            series: [
+                {
+                    name: '下载量',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {},
+                    data: downloadTrend
+                },
+                {
+                    name: '存储增量(MB)',
+                    type: 'line',
+                    stack: '总量',
+                    areaStyle: {},
+                    data: fileAdditionTrend
+                },
+                {
+                    name: '访问量',
+                    type: 'line',
+                    stack: '总量',
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top'
+                        }
+                    },
+                    areaStyle: {},
+                    data: loginTrend
+                }
+            ]
+        };
+
+        myCharts.setOption(option);
+
+        layui.link('assets/css/console.css');
+
+        // table.render({
+        //     method: 'post',
+        //     elem: '#logr-table',
+        //     url: 'system/loginRecord/list'
+        // });
+
+        // 渲染轮播
+        carousel.render({
+            elem: '.layui-carousel',
+            width: '100%',
+            height: '60px',
+            arrow: 'none',
+            autoplay: true,
+            trigger: device.ios || device.android ? 'click' : 'hover',
+            anim: 'fade'
+        });
+
+    });
+
+
+    $("#LoginTotal").html("${loginTotal}");
+    $("#DownloadTotal").html("${downloadTotal}");
+    $("#BlockHeight").html("${blockHeight}");
+    $("#SumFileSize").html("${sumFilesize}");
+
+
+
+
+
+
+</script>

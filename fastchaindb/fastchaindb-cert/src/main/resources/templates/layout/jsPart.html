@@ -1,0 +1,21 @@
+<script type="text/javascript" src="${ctxPath }/assets/libs/jquery-3.2.1.min.js"></script>
+<script type="text/javascript" src="${ctxPath }/assets/libs/q.js"></script>
+<script type="text/javascript" src="${ctxPath }/assets/libs/layui/layui.js"></script>
+<script type="text/javascript" src="${ctxPath }/assets/libs/zTree/js/jquery.ztree.all-3.5.min.js"></script>
+<script type="text/javascript" src="${ctxPath }/module/global/global-public.js"></script>
+<script type="text/javascript" src="${ctxPath }/assets/libs/My97DatePicker/WdatePicker.js"></script>
+<script type="text/javascript" src="${ctxPath }/assets/libs/template.js"></script>
+
+<script>
+    layui.config({
+        base: '${ctxPath}/module/',
+        basepath:'http://127.0.0.1:8089/'
+    }).extend({
+        formSelects: 'formSelects/formSelects-v4',
+        treetable: 'treetable-lay/treetable',
+        //扩展模块重名
+        echarts: 'dist/echarts'
+    }).use(['admin'], function () {
+        var admin = layui.admin;
+    });
+</script>

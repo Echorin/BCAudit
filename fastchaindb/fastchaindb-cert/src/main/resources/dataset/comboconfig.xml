@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Tables SqlSessionFactory="sqlSessionFactory">
+  <!-- combourl:路径，field:字段名，data:数据源，table：表名，sort：排序，query：查询条件，check：验证字段 -->
+  <!--往来单位-->
+  <Combo ComboTitle="下拉" ComboType="combo">
+    <ComboFields>
+      {combourl:"user_1",field:"name",data:"id",table:"sys_users",sort:"name",query:"1=1",check:"name"},
+      {combourl:"v_ex_warehouse_goods_pm",data:"pm_",field:"pm_",table:"v_ex_warehouse_goods",sort:"pm_",query:""},
+    </ComboFields>
+  </Combo>
+</Tables>

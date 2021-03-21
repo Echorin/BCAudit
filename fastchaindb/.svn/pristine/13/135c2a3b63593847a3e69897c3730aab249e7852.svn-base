@@ -1,0 +1,224 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Tables SqlSessionFactory="sqlSessionFactory">
+	<!-- OpenForm取值的字段必须存在Fields、HidFields中用于选中返回，tableType:[radio,checkbox] -->
+	<Table TableTitle="测试例子" TableName="sys_user" TableUrl="test_1" TableType="checkbox">
+		<Fields>
+			{field:"username",name:"名称",width:"160"},
+			{field:"email",name:"邮箱",width:"260"}
+		</Fields>
+		<HidFields>user_id</HidFields>
+		<OrderBy>username,user_id desc</OrderBy>
+		<OpenForm>user_id,username</OpenForm>
+	</Table>
+
+
+	<Table TableTitle="测试例子" TableName="test" TableUrl="test_2" TableType="radio">
+		<Fields>
+			{field:"name",name:"名称",width:"160"},
+			{field:"email",name:"邮箱",width:"260"}
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>name,id desc</OrderBy>
+		<OpenForm>id,name</OpenForm>
+	</Table>
+	<Table TableTitle="菜单列表" TableName="sys_menu" TableUrl="sys_menu" TableType="radio">
+		<Fields>
+			{field:"name",name:"名称",width:"160"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>name,id desc</OrderBy>
+		<OpenForm>id,name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站列表" TableName="sys_station" TableUrl="sys_station" TableType="radio">
+		<Fields>
+			{field:"name",name:"厂站名",width:"160"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>create_date desc, id</OrderBy>
+		<OpenForm>id,name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站_工艺流程" TableName="v_process_flow" TableUrl="v_process_flow" TableType="radio">
+		<Fields>
+			{field:"flow_name",name:"工艺流程名",width:"160"},
+			{field:"station_name",name:"污水厂站",width:"160"},
+		</Fields>
+		<HidFields>id,station_id</HidFields>
+		<OrderBy>create_date desc,id</OrderBy>
+		<OpenForm>id,flow_name,station_id,station_name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站_工艺子流程" TableName="v_process_subflow" TableUrl="v_process_subflow" TableType="radio">
+		<Fields>
+			{field:"subflow_name",name:"工艺子流程名",width:"160"},	
+			{field:"flow_name",name:"工艺流程名",width:"160"},
+			{field:"station_name",name:"污水厂站",width:"160"},
+		</Fields>
+		<HidFields>id,station_id</HidFields>
+		<OrderBy>create_date desc,id</OrderBy>
+		<OpenForm>id,subflow_name,flow_id,flow_name,station_id,station_name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站_工艺单元" TableName="v_process_unit" TableUrl="v_process_unit" TableType="radio">
+		<Fields>
+			{field:"unit_name",name:"工艺单元名",width:"160"},	
+			{field:"station_name",name:"污水厂站",width:"160"},
+		</Fields>
+		<HidFields>id,station_id</HidFields>
+		<OrderBy>create_date desc,id </OrderBy>
+		<OpenForm>id,unit_name,station_id,station_name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站_物料" TableName="v_materiel" TableUrl="v_materiel" TableType="radio">
+		<Fields>
+			{field:"name",name:"物料名",width:"260"},	
+			{field:"station_name",name:"污水厂站",width:"260"},
+			{field:"station_id",name:"station_id",type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>create_date desc,id </OrderBy>
+		<OpenForm>id,name,station_name</OpenForm>
+	</Table>
+	<Table TableTitle="厂站_设备" TableName="v_device" TableUrl="v_device" TableType="radio">
+		<Fields>
+			{field:"name",name:"设备名",width:"160"},	
+			{field:"device_no",name:"设备编号",width:"160"},
+			{field:"unit_name",name:"工艺单元名",width:"160"},
+			{field:"station_name",name:"厂站名",width:"160"},
+			{field:"unit_id",name:"unit_id",type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>create_date desc,id </OrderBy>
+		<OpenForm>id,name</OpenForm>
+	</Table>
+	
+	<Table TableTitle="厂站_PLC" TableName="v_plc" TableUrl="v_plc" TableType="radio">
+		<Fields>
+			{field:"var_name",name:"变量名",width:"100"},
+			{field:"show_name",name:"名称",width:"120"},
+			{field:"station_name",name:"厂站名",width:"180"},
+			{field:"station_id",name:"station_id",type:"hidden"},
+			{field:"write_mode",name:"write_mode",type:"hidden"}
+		</Fields>
+		<HidFields>id,subflow_id</HidFields>
+		<Filter>@stationId</Filter>
+		<OrderBy>create_date desc,id </OrderBy>
+		<OpenForm>id,var_name,show_name,subflow_id</OpenForm>
+	</Table>
+	
+	<Table TableTitle="任务列表" TableName="v_lab_plan_task" TableUrl="v_lab_plan_task" TableType="radio">
+		<Fields>
+			{field:"type_name",name:"检测类别",width:"80"},
+			{field:"task_no",name:"任务编号",width:"120"},
+			{field:"task_name",name:"任务名称",width:"260"},
+			{field:"unit_name",name:"取样地点",width:"180"},
+			{field:"sampling_count",name:"取样数量",width:"80",format:"%d"},
+			{field:"count_unit",name:"单位",width:"60"},
+			{field:"sampling_man",name:"取样人",width:"80"},
+			{field:"sampling_date",name:"取样时间",width:"90",format:"yyyy-MM-dd"},
+			{field:"id",name:"id",type:"hidden"},
+		</Fields>
+		<Filter>@stationId and task_flag=0</Filter>
+		<OrderBy>sampling_date desc,id </OrderBy>
+		<OpenForm>id,task_no,task_name,type_name,unit_name,sampling_count,count_unit,sampling_man,sampling_date</OpenForm>
+	</Table>
+	
+	<Table TableTitle="sys_plc" TableName="sys_plc" TableUrl="sys_plc" TableType="radio">
+		<Fields>
+			{field:"show_name",name:"指标项",width:"100"},
+		</Fields>
+		<Filter>@stationId and write_mode=2</Filter>
+		<OpenForm>show_name</OpenForm>
+	</Table>
+
+	<Table TableTitle="审核人" TableName="sys_user" TableUrl="sys_user" TableType="checkbox">
+		<Fields>
+			{field:"name",name:"名称",width:"160"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>id,name</OpenForm>
+	</Table>
+
+	<Table TableTitle="设备清单" TableName="v_device_eqp" TableUrl="v_device_eqp_1" TableType="radio">
+		<Fields>
+			{"field":"eqp_no","name":"设备编号",width:"160"},
+			{"field":"eqp_name","name":"设备名称",width:"160"},
+			{"field":"eqp_model","name":"规格型号",width:"160"},
+			{"field":"manufacturer","name":"生产厂家",width:"160"},
+			{"field":"manuf_date","name":"生产日期",format:"yyyy-MM-dd", width:"160"},
+			{"field":"dept_name","name":"使用部门",width:"160"},
+			{"field":"use_date","name":"使用日期",format:"yyyy-MM-dd",width:"160"},
+			{"field":"location","name":"安装地点",width:"160"},
+			{"field":"status_name","name":"设备状态",width:"160"},
+			{"field":"pur_date","name":"购买日期",format:"yyyy-MM-dd",width:"160"},
+			{"field":"eqp_status","name":"设备状态代码", type:"hidden"},
+			{"field":"use_dept","name":"使用部门代码", type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<Filter>@stationId and eqp_status = 1</Filter>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>id,eqp_no,eqp_name,eqp_model,use_dept,dept_name,use_date,manufacturer,manuf_date</OpenForm>
+	</Table>
+
+	<Table TableTitle="库存管理" TableName="v_device_eqp" TableUrl="v_device_eqp" TableType="radio">
+		<Fields>
+			{"field":"eqp_no","name":"设备编号",width:"160"},
+			{"field":"eqp_name","name":"设备名称",width:"160"},
+			{"field":"eqp_model","name":"规格型号",width:"160"},
+			{"field":"pur_date","name":"购买日期",format:"yyyy-MM-dd",width:"160"},
+			{"field":"fileid","name":"fileid", type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<Filter>@stationId and eqp_count=1</Filter>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>id,eqp_no,fileid</OpenForm>
+	</Table>
+	
+	<Table TableTitle="设备维修" TableName="v_eqp_repair_detail" TableUrl="v_eqp_repair_detail" TableType="radio">
+		<Fields>
+	   	  	{"field":"repair_no","name":"维修单号",width:"160"},
+			{"field":"eqp_no","name":"设备编号",width:"160"},
+			{"field":"eqp_name","name":"设备名称",width:"160"},
+			{"field":"app_deptname","name":"申请部门",width:"160"},
+			{"field":"app_date","name":"申请时间",format:"yyyy-MM-dd", width:"160"},
+			{"field":"class_name","name":"故障类别",width:"160"},
+			{"field":"fault_desc","name":"故障描述",width:"160"},
+			{"field":"check_flag","name":"维修申请审批标识", type:"hidden"},
+			{"field":"opt_flag","name":"维修状态标识", type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<Filter>@stationId</Filter>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>repair_no,eqp_no,eqp_name,app_date,id</OpenForm>
+	</Table>
+	
+	<Table TableTitle="设备保养" TableName="v_eqp_maint_detail" TableUrl="eqp_maint" TableType="radio">
+		<Fields>
+		  {"field":"device_id","name":"设备id", type:"hidden"},
+	   	  {"field":"maint_no","name":"保养单号"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"app_date","name":"保养申请时间"},
+	   	  {"field":"maint_level_name","name":"保养级别名称"},
+	   	  {"field":"eqp_model","name":"规格型号",type:"hidden"},
+	   	  {"field":"maint_level_code","name":"保养级别", type:"hidden"},
+	   	  {"field":"check_flag","name":"审批标识", type:"hidden"},
+	   	  {"field":"opt_flag","name":"保养状态标识", type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<Filter>@stationId</Filter>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>device_id,maint_no,eqp_no,eqp_name,app_date,maint_level_code,maint_level_name,id,eqp_model,
+		check_flag,opt_flag</OpenForm>
+	</Table>
+	
+	<Table TableTitle="用户组" TableName="sms_usergroup" TableUrl="sms_usergroup" TableType="checkbox">
+		<Fields>
+	   	  	{"field":"group_name","name":"组名",width:"160"},
+			{"field":"user_name_list","name":"用户信息",width:"160"},
+			{"field":"id","name":"组id", type:"hidden"},
+			{"field":"user_id_list","name":"用户id", type:"hidden"},
+		</Fields>
+		<HidFields>id</HidFields>
+		<Filter>@stationId and IFNULL(sms_model,0)=0</Filter>
+		<OrderBy>id desc</OrderBy>
+		<OpenForm>group_name,user_name_list,user_id_list,id</OpenForm>
+	</Table>
+</Tables>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oschain.fastchaindb.chainsql.dao.CertBlockMapper">
+
+    <!-- 修改 -->
+	<update id="updateByTranId" parameterType="com.oschain.fastchaindb.chainsql.model.CertBlock">
+		update cert_block set
+			block_hash = #{blockHash},
+			block_time = #{blockTime},
+			block_status = #{blockStatus},
+			last_check_time = now()
+		where transaction_id = #{transactionId}
+	</update>
+
+	<!-- 修改 -->
+	<update id="updateLastTimeByTranId" parameterType="com.oschain.fastchaindb.chainsql.model.CertBlock">
+		update cert_block set last_check_time = #{lastCheckTime}
+		where transaction_id = #{transactionId}
+	</update>
+
+	<update id="updateLastTimeByTranIds"  parameterType="java.util.List">
+		UPDATE cert_block set last_check_time = now()
+		WHERE transaction_id IN
+		<foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+			#{item.transactionId}
+		</foreach>
+	</update>
+
+
+</mapper>

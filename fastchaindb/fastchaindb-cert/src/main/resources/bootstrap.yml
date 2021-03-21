@@ -1,0 +1,15 @@
+#spring:
+#  application:
+#    name: kevin-easyweb
+
+# 注册中心配置
+
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8089/eureka/ #http://pig:pig@kevin-eureka:8761/eureka/
+#      register-with-eureka: false #是否将自己注册到Eureka Server上，默认为true
+#      fetch-registry: false #是否从Eureka Server上获取注册信息，默认为true
+

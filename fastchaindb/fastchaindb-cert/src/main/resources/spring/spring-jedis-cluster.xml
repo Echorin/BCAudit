@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+	<!--配置 jedis pool-->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<!-- 最大连接数 -->
+		<property name="maxTotal" value="200"/>
+		<!-- 最大空闲时间 -->
+		<property name="maxIdle" value="10"/>
+		<!-- 获得链接时的最大等待毫秒数，小于0：阻塞不确定时间，默认-1 -->
+		<property name="maxWaitMillis" value="5000"/>
+
+
+		<!--&lt;!&ndash; 每次最大连接数 &ndash;&gt;-->
+		<!--<property name="numTestsPerEvictionRun" value="1024"/>-->
+		<!--&lt;!&ndash; 释放扫描的扫描间隔 &ndash;&gt;-->
+		<!--<property name="timeBetweenEvictionRunsMillis" value="5000"/>-->
+		<!--&lt;!&ndash; 连接的最小空闲时间 &ndash;&gt;-->
+		<!--<property name="minEvictableIdleTimeMillis" value="1800000"/>-->
+		<!--&lt;!&ndash; 连接控歘按时间多久后释放，当空闲时间>该值且空闲连接>最大空闲连接数时直接释放 &ndash;&gt;-->
+		<!--<property name="softMinEvictableIdleTimeMillis" value="10000"/>-->
+		<!--&lt;!&ndash; 在获得链接的时候检查有效性，默认false &ndash;&gt;-->
+		<!--<property name="testOnBorrow" value="true"/>-->
+		<!--&lt;!&ndash; 在空闲时检查有效性，默认false &ndash;&gt;-->
+		<!--<property name="testWhileIdle" value="true"/>-->
+		<!--&lt;!&ndash; 连接耗尽时是否阻塞，false报异常，true阻塞超时 默认：true&ndash;&gt;-->
+		<!--<property name="blockWhenExhausted" value="false"/>-->
+	</bean>
+
+
+	<!--配置RedisClusterConfiguration-->
+	<bean id="redisClusterConfiguration" class="org.springframework.data.redis.connection.RedisClusterConfiguration">
+	<!--#跨集群执行命令时要遵循的最大重定向数量-->
+    <property name="maxRedirects" value="3"></property>
+    <property name="clusterNodes">
+        <set>
+            <bean class="org.springframework.data.redis.connection.RedisNode">
+                <constructor-arg name="host" value="${redis.host1}"/>
+                <constructor-arg name="port" value="${redis.port1}"/>
+            </bean>
+            <bean class="org.springframework.data.redis.connection.RedisNode">
+                <constructor-arg name="host" value="${redis.host2}"/>
+                <constructor-arg name="port" value="${redis.port2}"/>
+            </bean>
+            <bean class="org.springframework.data.redis.connection.RedisNode">
+                <constructor-arg name="host" value="${redis.host3}"/>
+                <constructor-arg name="port" value="${redis.port3}"/>
+            </bean>
+        </set>
+    </property>
+</bean>
+
+<!--配置JedisConnectionFactory-->
+	<bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+		<constructor-arg name="poolConfig" ref="jedisPoolConfig"/>
+		<constructor-arg name="clusterConfig" ref="redisClusterConfiguration"/>
+		<!--<property name="password" value="${redis.password}"/>-->
+	</bean>
+
+	<!--redisTemplate-->
+	<bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+		<property name="connectionFactory" ref="jedisConnectionFactory"/>
+	</bean>
+
+</beans>

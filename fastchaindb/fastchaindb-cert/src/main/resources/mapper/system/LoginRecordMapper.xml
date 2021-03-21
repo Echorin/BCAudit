@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.oschain.fastchaindb.system.dao.LoginRecordMapper">
+
+    <select id="listFull" resultType="com.oschain.fastchaindb.system.model.LoginRecord">
+        SELECT a.*,b.nick_name,b.username
+        FROM sys_login_record a
+        left join sys_user b on a.user_id=b.user_id
+        <where>
+            <if test="startDate != null">
+                AND a.create_time&gt;=#{startDate}
+            </if>
+            <if test="endDate != null">
+                AND a.create_time&lt;=#{endDate}
+            </if>
+            <if test="account != null">
+                AND b.username=#{account}
+            </if>
+        </where>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <select id="getLoginTotal" resultType="Integer">
+        SELECT COUNT(*) FROM sys_login_record
+    </select>
+
+    <select id="sumPastLoginRecord" resultType="com.oschain.fastchaindb.system.model.Console">
+        select v.month,ifnull(b.count,0)  count from (
+                                                 SELECT DATE_FORMAT(CURDATE(), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 1 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 2 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 3 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 4 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 5 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 6 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 7 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 8 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 9 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 10 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 11 MONTH), '%Y-%m') AS 'month'
+                                             ) v
+                                                 left join
+                                             (select
+                                                  left(create_time,7) as 'month',count(*) as count
+                                              from sys_login_record as a
+                                              where DATE_FORMAT(a.create_time,'%Y-%m')>
+                                                    DATE_FORMAT(date_sub(curdate(), interval 12 month),'%Y-%m')
+                                              GROUP BY month
+                                             )b
+                                             on v.month = b.month group by v.month
+    </select>
+
+</mapper>

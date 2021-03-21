@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/fastchaindb.iml" filepath="$PROJECT_DIR$/.idea/fastchaindb.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-cert/fastchaindb-cert.iml" filepath="$PROJECT_DIR$/fastchaindb-cert/fastchaindb-cert.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-core/fastchaindb-core.iml" filepath="$PROJECT_DIR$/fastchaindb-core/fastchaindb-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-eth/fastchaindb-eth.iml" filepath="$PROJECT_DIR$/fastchaindb-eth/fastchaindb-eth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-fabric/fastchaindb-fabric.iml" filepath="$PROJECT_DIR$/fastchaindb-fabric/fastchaindb-fabric.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-mybatis/fastchaindb-mybatis.iml" filepath="$PROJECT_DIR$/fastchaindb-mybatis/fastchaindb-mybatis.iml" />
+      <module fileurl="file://$PROJECT_DIR$/fastchaindb-sdk/fastchaindb-sdk.iml" filepath="$PROJECT_DIR$/fastchaindb-sdk/fastchaindb-sdk.iml" />
+    </modules>
+  </component>
+</project>

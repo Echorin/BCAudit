@@ -1,0 +1,675 @@
+package com.oschain.fastchaindb.fabric.service;
+
+import com.hyperledger.fabric.sdk.entity.dto.api.*;
+import com.hyperledger.fabric.sdk.handler.ApiHandler;
+import com.oschain.fastchaindb.blockchain.constants.TransactionType;
+import com.oschain.fastchaindb.blockchain.dto.*;
+import com.oschain.fastchaindb.chainsql.model.CertBlock;
+import com.oschain.fastchaindb.chainsql.service.CertBlockService;
+import com.oschain.fastchaindb.common.PageResult;
+import com.oschain.fastchaindb.common.config.FabricStartConfig;
+import com.oschain.fastchaindb.common.utils.*;
+import com.oschain.fastchaindb.fabric.Handler.FabricHandler;
+import com.oschain.fastchaindb.fabric.dto.TransactionResult;
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+import net.sf.json.JSONObject;
+import org.apache.commons.codec.binary.Hex;
+import org.hyperledger.fabric.sdk.*;
+import org.hyperledger.fabric.sdk.helper.Config;
+import org.omg.PortableInterceptor.INACTIVE;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.*;
+
+import static com.hyperledger.fabric.sdk.common.Config.*;
+import static com.hyperledger.fabric.sdk.common.Config.PEER0_ORG1_EVENT_URL;
+import static com.hyperledger.fabric.sdk.logger.Logger.debug;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.hyperledger.fabric.sdk.BlockInfo.EnvelopeType.TRANSACTION_ENVELOPE;
+
+@Service
+public class FabricService {
+    private static final Logger logger = LoggerFactory.getLogger(FabricService.class);
+    public static String serverTag = "0";
+
+    @Autowired
+    private RedisUtil redisUtil;
+
+//    @Autowired
+//    private ChaincodeID chaincodeID;
+
+    @Autowired
+    private HFClient hfClient;
+    @Autowired
+    CertBlockService certBlockService;
+
+    @Value("${fastchaindb.async}")
+    private boolean asyncSend = false;
+
+//    @Value("${server.tag}")
+//    public String serverTag;
+
+    @Value("${server.tag}")
+    public void setServerTag(String serverTag) {
+        FabricService.serverTag = serverTag;
+    }
+
+
+    /**
+     * 生成交易
+     *
+     * @param transactionData
+     * @return
+     * @throws Exception
+     */
+    public FCDBTransaction sendTransactionProposal(FCDBAsset asset) throws Exception {
+
+        Channel channel = hfClient.getChannel(FabricStartConfig.channelName);
+
+        // 6. 测试智能合约invoke
+        System.out.println("第六步");
+
+        String uuid = UUIDUtil.randomUUID32();
+        String uuid2 = String.valueOf(System.currentTimeMillis());
+        System.out.println(asset.getTransactionData());
+        //System.out.println(asset.toString());
+        //System.out.println(asset.getData());
+        String data = asset.getTransactionData();
+        ExecuteCCDTO invokeCCDTO = new ExecuteCCDTO.Builder().funcName("invoke").params(new String[]{JSONObject.fromObject(data).getString("fileId"), JSONObject.fromObject(data).getString("fileHash")}).chaincodeID(FabricStartConfig.chaincodeID).build();
+
+        //ExecuteCCDTO invokeCCDTO = new ExecuteCCDTO.Builder().funcName("invoke").params(new String[] {"a", "b", "1"}).chaincodeID(chaincodeID).build();
+        TransactionResult transactionResult = FabricHandler.sendTransactionProposal(hfClient, channel, invokeCCDTO, asyncSend);
+
+        if (transactionResult == null) {
+            logger.error("区块链写入为空");
+            return null;
+        }
+
+        Collection<ProposalResponse> proposalResponseList = transactionResult.getProposalResponse();
+        if (proposalResponseList.isEmpty()) {
+            logger.error("区块链写入值为空");
+            return null;
+        } else {
+
+            ProposalResponse proposalResponse = proposalResponseList.iterator().next();
+
+            FCDBTransaction transaction = new FCDBTransaction();
+            transaction.setTransactionId(proposalResponse.getTransactionID());
+            transaction.setTransactionData(asset.getTransactionData());
+            transaction.setTransactionType(asset.getTransactionType());
+            transaction.setTransactionTime(new Date());
+
+            //KEY
+            String cacheKey = proposalResponse.getTransactionID();
+            //异步提交
+            if (asyncSend) {
+                EHCacheUtil.put(FabricStartConfig.chaincodeName, cacheKey, proposalResponseList);
+                //存入Redis队列
+                //redisUtil.in(FabricConfig.chaincodeName + serverTag, transaction);
+                FabricHandler.concurrentLinkedQueue.offer(transaction);
+            } else {
+                //并且存入数据库
+                CertBlock certBlock = new CertBlock();
+
+                //区块信息
+                BlockEvent.TransactionEvent transactionEvent = transactionResult.getTransactionEvent();
+                if (transactionEvent != null) {
+                    String dataHash = Hex.encodeHexString(transactionEvent.getBlockEvent().getDataHash());
+                    certBlock.setBlockHash(dataHash);
+                    certBlock.setBlockTime(transactionEvent.getTimestamp());
+                    certBlock.setBlockStatus(1);
+                } else {
+                    certBlock.setBlockStatus(-1);
+                }
+
+                certBlock.setBlockBody(transaction.getTransactionData());
+                certBlock.setTransactionId(transaction.getTransactionId());
+                certBlock.setCreateTime(transaction.getTransactionTime());//new Date(proposalResponse.getProposalResponse().getTimestamp().getSeconds() * 1000)
+                certBlock.setWriteMode(0);
+                System.out.println(certBlock);
+                System.out.println(transaction);
+                splitBlock(certBlock,transaction);
+
+                certBlockService.save(certBlock);
+            }
+
+            return transaction;
+        }
+    }
+
+    /**
+     * 共识生成区块
+     *
+     * @param transaction
+     * @throws Exception
+     */
+    public void sendTransaction(FCDBTransaction transaction) throws Exception {
+
+
+
+        try {
+            String cacheKey = transaction.getTransactionId();
+            Collection<ProposalResponse> proposalResponseList = (Collection<ProposalResponse>) EHCacheUtil.get(FabricStartConfig.chaincodeName, cacheKey);
+
+            Channel channel = hfClient.getChannel(FabricStartConfig.channelName);
+            BlockEvent.TransactionEvent transactionEvent = FabricHandler.sendTransaction(channel, proposalResponseList);
+
+
+            //如果交易成功移除缓存
+            if (transactionEvent != null) {
+                EHCacheUtil.remove(FabricStartConfig.chaincodeName, cacheKey);
+
+                String transactionID = transactionEvent.getTransactionID();
+                BlockEvent blockEvent = transactionEvent.getBlockEvent();
+                //int envelopeCount = blockEvent.getEnvelopeCount();
+                //long num = blockEvent.getBlockNumber();
+                String dataHash = Hex.encodeHexString(blockEvent.getDataHash());
+                //String s2 = Hex.encodeHexString(blockEvent.getPreviousHash());
+
+                CertBlock certBlock = new CertBlock();
+                certBlock.setTransactionId(transactionID);
+                certBlock.setBlockStatus(1);
+                certBlock.setBlockHash(dataHash);
+                certBlock.setBlockTime(transactionEvent.getTimestamp());
+                certBlock.setBlockBody(transaction.getTransactionData());
+                certBlock.setCreateTime(transaction.getTransactionTime());
+                certBlock.setWriteMode(1);
+                splitBlock(certBlock,transaction);
+
+                certBlockService.save(certBlock);
+                //certBlockService.update(certBlock);
+            } else {
+
+                //如果提交5次失败，则放弃共识，通知管理员
+                int sendNum=transaction.getSendNum();
+                if(sendNum>=5){
+                    CertBlock certBlock = new CertBlock();
+                    certBlock.setTransactionId(transaction.getTransactionId());
+                    certBlock.setBlockStatus(-2);
+                    certBlock.setBlockBody(transaction.getTransactionData());
+                    certBlock.setCreateTime(transaction.getTransactionTime());
+                    certBlock.setWriteMode(1);
+                    splitBlock(certBlock,transaction);
+
+                    certBlockService.save(certBlock);
+                }else{
+                    //失败，重新存入Redis队列
+                    //redisUtil.in(FabricConfig.chaincodeName, transaction);
+                    transaction.setSendNum(sendNum+1);
+                    FabricHandler.concurrentLinkedQueue.offer(transaction);
+                }
+
+            }
+        }catch (Exception ex){
+            CertBlock certBlock = new CertBlock();
+            certBlock.setTransactionId(transaction.getTransactionId());
+            certBlock.setBlockStatus(-1);
+            certBlock.setBlockBody(transaction.getTransactionData());
+            certBlock.setCreateTime(transaction.getTransactionTime());
+            certBlock.setWriteMode(1);
+            splitBlock(certBlock,transaction);
+
+            certBlockService.save(certBlock);
+        }
+
+    }
+
+    private void splitBlock(CertBlock certBlock, FCDBTransaction transaction){
+        System.out.println("splitBlock");
+        System.out.println(transaction.getTransactionType());
+        //针对数字档案单独处理
+        if(transaction.getTransactionType().equals(TransactionType.ARCHIVES.toString())) {
+            FCDBAssetKey fcdbAssetKey = GsonUtil.gsonToBean(transaction.getTransactionData(), FCDBAssetKey.class);
+            certBlock.setBlockKey1(fcdbAssetKey.getBlockKey1());
+            certBlock.setBlockKey2(fcdbAssetKey.getBlockKey2());
+            certBlock.setBlockKey3(fcdbAssetKey.getBlockKey3());
+            certBlock.setBlockKey4(fcdbAssetKey.getBlockKey4());
+            certBlock.setBlockKey5(fcdbAssetKey.getBlockKey5());
+        }
+    }
+
+    public FCDBBlock getXChainByTransactionId(FCDBTransationQuery transationQuery) throws Exception {
+
+        Channel channel = hfClient.getChannel(FabricStartConfig.channelName);
+
+        logger.debug("区块高度："+channel.queryBlockchainInfo().getHeight());
+
+        BlockInfo blockInfo = channel.queryBlockByTransactionID(transationQuery.getTransactionId());
+        HashMap<String, String> transactionIdMap = new HashMap<String, String>();
+        transactionIdMap.put(transationQuery.getTransactionId(), "");
+
+        return getXChainBlock(blockInfo, transactionIdMap);
+
+//        byte[] currentDataHash = blockInfo.getDataHash();
+//        xChainBlock.setBlockHash(Hex.encodeHexString(currentDataHash));
+//        xChainBlock.setPrevBlockHash(Hex.encodeHexString(blockInfo.getPreviousHash()));
+//        xChainBlock.setBlockHeight(blockInfo.getBlockNumber());
+//        xChainBlock.setTransactionCount(blockInfo.getTransactionCount());
+//        //xChainBlock.setBlockTime(blockInfo);
+//
+//        for (BlockInfo.EnvelopeInfo envelopeInfo: blockInfo.getEnvelopeInfos()) {
+//
+//            /* TRANSACTION_ENVELOPE: 交易块, ENVELOPE: 创世纪块 */
+//            if (envelopeInfo.getType() == TRANSACTION_ENVELOPE) {
+//                //块里面包含多个交易信息，这里只去查询当前的TransactionId
+//                if (envelopeInfo.getTransactionID().contains(transactionId)) {
+//                    BlockInfo.TransactionEnvelopeInfo transactionEnvelopeInfo = (BlockInfo.TransactionEnvelopeInfo) envelopeInfo;
+//                    for (BlockInfo.TransactionEnvelopeInfo.TransactionActionInfo transactionActionInfo : transactionEnvelopeInfo.getTransactionActionInfos()) {
+//
+//                        /* 交易传入参数信息 */
+//                        logger.debug("----------------------- 【交易传入参数信息】  -----------------------");
+//                        for (int i = 0; i < transactionActionInfo.getChaincodeInputArgsCount(); i++) {
+//                            logger.debug( new String(transactionActionInfo.getChaincodeInputArgs(i), UTF_8));
+//
+//                            //logger.debug("参数索引: %d, 参数值: %s", i, new String(transactionActionInfo.getChaincodeInputArgs(i), UTF_8));
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
+        //logger.debug("current block data hash: %s.", Hex.encodeHexString(currentDataHash));
+        //logger.debug("previous block hash: %s.", Hex.encodeHexString(blockInfo.getPreviousHash()));
+        //logger.debug("blockNumber: %d, envelopeCount: %d, channelId: %s.", blockInfo.getBlockNumber(), blockInfo.getEnvelopeCount(), blockInfo.getChannelId());
+
+//        return xChainBlock;
+    }
+
+    /**
+     * 根据存储内容查询，针对特殊情况，单独解析
+     * @param transationQuery
+     * @return
+     * @throws Exception
+     */
+    public List<FCDBBlock> getXChainByTransactionData(FCDBTransationQuery transationQuery) throws Exception {
+
+        CertBlock certBlock = new CertBlock();
+        //数字档案单独处理(可以拆分存储)
+        if(transationQuery.getTransactionType().equals(TransactionType.ARCHIVES.toString())){
+            FCDBAssetKey fcdbAssetKey = GsonUtil.gsonToBean(transationQuery.getTransactionData(),FCDBAssetKey.class);
+            //certBlock.setBlockBody(fcdbAssetKey.getBlockBody());
+            certBlock.setBlockKey1(fcdbAssetKey.getBlockKey1());
+            certBlock.setBlockKey2(fcdbAssetKey.getBlockKey2());
+            certBlock.setBlockKey3(fcdbAssetKey.getBlockKey3());
+            certBlock.setBlockKey4(fcdbAssetKey.getBlockKey4());
+            certBlock.setBlockKey5(fcdbAssetKey.getBlockKey5());
+        }
+        else{
+            certBlock.setBlockBody(transationQuery.getTransactionData());
+        }
+
+
+        int pageIndex=0;
+        if(transationQuery.getPageIndex()!=null){
+            pageIndex=transationQuery.getPageIndex();
+        }
+
+        PageResult<CertBlock> page = certBlockService.listCertBlock(pageIndex,20,certBlock);
+        if(page==null){
+            logger.error("未查询到相关内容");
+            return null;
+        }
+
+        //现在获取transationID
+        BlockInfo blockInfo;
+        HashMap<String, String> transactionIdMap;
+        List<FCDBBlock> transactionList = new ArrayList<>();
+        Channel channel = hfClient.getChannel(FabricStartConfig.channelName);
+
+        List<CertBlock> list=page.getData();
+        for (CertBlock certBlockMod : list) {
+            blockInfo = channel.queryBlockByTransactionID(certBlockMod.getTransactionId());
+            transactionIdMap = new HashMap<String, String>();
+            transactionIdMap.put(certBlockMod.getTransactionId(), "");
+            FCDBBlock fcdbBlock = getXChainBlock(blockInfo, transactionIdMap);
+            transactionList.add(fcdbBlock);
+        }
+
+        return transactionList;
+    }
+
+    private FCDBBlock getXChainBlock(BlockInfo blockInfo, Map<String, String> transactionIdMap) {
+
+        FCDBBlock xChainBlock = new FCDBBlock();
+        byte[] currentDataHash = blockInfo.getDataHash();
+        xChainBlock.setBlockHash(Hex.encodeHexString(currentDataHash));
+        xChainBlock.setPrevBlockHash(Hex.encodeHexString(blockInfo.getPreviousHash()));
+        xChainBlock.setBlockHeight(blockInfo.getBlockNumber());
+        xChainBlock.setTransactionCount(blockInfo.getTransactionCount());
+        //xChainBlock.setBlockTime(blockInfo.);
+
+        FCDBTransaction transaction;
+        List<FCDBTransaction> transactionList = new ArrayList<FCDBTransaction>();
+        Map<String, String> transactionMap = new HashMap<>();
+
+        for (BlockInfo.EnvelopeInfo envelopeInfo : blockInfo.getEnvelopeInfos()) {
+
+            /* TRANSACTION_ENVELOPE: 交易块, ENVELOPE: 创世纪块 */
+            if (envelopeInfo.getType() == TRANSACTION_ENVELOPE) {
+
+                //块里面包含多个交易信息，这里只去查询当前的TransactionId
+                BlockInfo.TransactionEnvelopeInfo transactionEnvelopeInfo = null;
+                if (transactionIdMap == null) {
+                    transactionEnvelopeInfo = (BlockInfo.TransactionEnvelopeInfo) envelopeInfo;
+                } else {
+                    if (transactionIdMap.containsKey(envelopeInfo.getTransactionID())) {
+                        transactionEnvelopeInfo = (BlockInfo.TransactionEnvelopeInfo) envelopeInfo;
+                    }
+                }
+
+                if (transactionEnvelopeInfo == null) {
+                    continue;
+                }
+
+                for (BlockInfo.TransactionEnvelopeInfo.TransactionActionInfo transactionActionInfo : transactionEnvelopeInfo.getTransactionActionInfos()) {
+                    /* 交易传入参数信息 */
+                    logger.debug("----------------------- 【交易传入参数信息】  -----------------------");
+                    for (int i = 0; i < transactionActionInfo.getChaincodeInputArgsCount(); i++) {
+                        logger.debug(new String(transactionActionInfo.getChaincodeInputArgs(i), UTF_8));
+                        //logger.debug("参数索引: %d, 参数值: %s", i, new String(transactionActionInfo.getChaincodeInputArgs(i), UTF_8));
+                        if (!transactionMap.containsKey(envelopeInfo.getTransactionID())) {
+                            transaction = new FCDBTransaction();
+                            transaction.setTransactionId(envelopeInfo.getTransactionID());
+                            transaction.setTransactionData(new String(transactionActionInfo.getChaincodeInputArgs(2), UTF_8));
+                            transaction.setTransactionTime(envelopeInfo.getTimestamp());
+
+                            xChainBlock.setBlockTime(envelopeInfo.getTimestamp());
+
+
+                            transactionList.add(transaction);
+                            transactionMap.put(envelopeInfo.getTransactionID(), "");
+                        }
+                    }
+
+
+                }
+            }
+        }
+        xChainBlock.setTransactionList(transactionList);
+        //更新时间
+        //certBlockService.updateLastTime(transactionList);
+        return xChainBlock;
+    }
+
+    public long getBlockHeight() throws Exception {
+        Channel channel = hfClient.getChannel(FabricStartConfig.channelName);
+
+        logger.debug("区块高度："+channel.queryBlockchainInfo().getHeight());
+
+        return channel.queryBlockchainInfo().getHeight();
+    }
+
+
+    /********************************** 动态添加证书 ***************************************************/
+
+
+    //创建通道
+    public void createChannel(String channelName) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+
+        // 加载配置文件
+        System.setProperty(Config.ORG_HYPERLEDGER_FABRIC_SDK_CONFIGURATION, cxtPath + "config.properties");
+
+
+        /* 通道名称 */
+        //String channelName = "mychannel";
+
+        /* 智能合约配置信息 */
+        String chaincodeName = "hashstore";
+        String chaincodeVersion = "1.0";
+        String chaincodePath = "github.com/testchaincode";
+        ChaincodeID chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        // 2. 创建通道
+        System.out.println("第二步");
+        Collection<OrderNodeDTO> orderNodeDTOS = new ArrayList<>();
+        orderNodeDTOS.add(new OrderNodeDTO(ORDER_NAME, ORDER_GRPC_URL));
+
+        Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        peerNodeDTOS.add(new PeerNodeDTO(PEER0_ORG1_NAME, PEER0_ORG1_GRPC_URL, PEER0_ORG1_EVENT_URL));
+        //peerNodeDTOS.add(new PeerNodeDTO(PEER1_ORG1_NAME, PEER1_ORG1_GRPC_URL, PEER1_ORG1_EVENT_URL));
+
+        CreateChannelDTO createChannelDTO = new CreateChannelDTO();
+        //响应的文件必须放到指定目录下
+        createChannelDTO.setChannelConfigPath(cxtPath + "channel-artifacts/"+channelName+".tx");
+        createChannelDTO.setOrderNodeDTOS(orderNodeDTOS);
+        createChannelDTO.setPeerNodeDTOS(peerNodeDTOS);
+        Channel channel = ApiHandler.createChannel(client, channelName,createChannelDTO,false);// createChannelDTO, false
+        System.out.println("创建通道测试成功,通道为:"+channel.getName());
+    }
+
+    //加入通道
+    //public void jionChannel(HFClient client, Channel channel, PeerNodeDTO peerNodeDTO1) throws Exception {
+    public void jionChannel() throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        //2.准备peer
+        Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        peerNodeDTOS.add(new PeerNodeDTO(PEER1_ORG1_NAME, PEER1_ORG1_GRPC_URL, PEER1_ORG1_EVENT_URL));
+        //Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        //peerNodeDTOS.add(peerNodeDTO1);
+        //3.连接channel
+        Channel channel = ApiHandler.createChannel(client, "mychannel");
+        for (PeerNodeDTO peerNodeDTO : peerNodeDTOS) {
+            Peer peer = client.newPeer(peerNodeDTO.getNodeName(), peerNodeDTO.getGrpcUrl(), peerNodeDTO.getProperties());
+            channel.joinPeer(peer);
+            debug("peer节点: %s 已成功加入通道.", peerNodeDTO.getNodeName());
+        }
+        if (!channel.isInitialized()) {
+            channel.initialize();
+        }
+    }
+    //安装合约
+    //public void installChaincode(HFClient client, String chaincodeName) throws Exception {
+    public void installChaincode(String chaincodeName) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        ChaincodeID chaincodeID = null;
+        String chaincodeVersion = "1.0";
+        if(chaincodeName.equals("mycc")){
+            String chaincodePath = "github.com/chaincode_example02";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }else {
+            String chaincodePath = "github.com/testchaincode";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+        }
+
+        //String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        peerNodeDTOS.add(new PeerNodeDTO(PEER1_ORG1_NAME, PEER1_ORG1_GRPC_URL, PEER1_ORG1_EVENT_URL));
+        // 3. 安装智能合约
+        System.out.println("第三步");
+        InstallCCDTO installCCDTO = new InstallCCDTO.Builder().chaincodeID(chaincodeID).chaincodeSourceLocation(cxtPath + "chaincodes/sample").peerNodeDTOS(peerNodeDTOS).build();
+        ApiHandler.installChainCode(client, installCCDTO);
+    }
+
+    //初始化合约
+    public void initChaincode(HFClient client, Channel channel, String chaincodeName, String[] str) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        ChaincodeID chaincodeID = null;
+        String chaincodeVersion = "1.0";
+        if(chaincodeName.equals("mycc")){
+            String chaincodePath = "github.com/chaincode_example02";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }else {
+            String chaincodePath = "github.com/testchaincode";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+        }
+        // 初始化智能合约
+        ExecuteCCDTO initCCDTO = new ExecuteCCDTO.Builder().funcName("init").params(str).chaincodeID(chaincodeID).policyPath(cxtPath + "policy/chaincodeendorsementpolicy.yaml").build();
+        ApiHandler.initializeChainCode(client, channel, initCCDTO);
+    }
+
+    //升级合约
+    public void upgradeChaincode(String chaincodeName) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /* 智能合约配置信息 */
+        //String chaincodeName = "mycc";
+        ChaincodeID chaincodeID = null;
+        String chaincodeVersion = "1.2";    // 升级合约版本号
+        if(chaincodeName.equals("mycc")){
+            String chaincodePath = "github.com/chaincode_example02";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }else {
+            String chaincodePath = "github.com/testchaincode";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+        }
+
+        // 2. 安装新版本智能合约
+        Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        peerNodeDTOS.add(new PeerNodeDTO(PEER0_ORG1_NAME, PEER0_ORG1_GRPC_URL, PEER0_ORG1_EVENT_URL));
+        //peerNodeDTOS.add(new PeerNodeDTO(PEER1_ORG1_NAME, PEER1_ORG1_GRPC_URL, PEER1_ORG1_EVENT_URL));
+        InstallCCDTO installCCDTO = new InstallCCDTO.Builder().chaincodeID(chaincodeID).chaincodeSourceLocation(cxtPath + "chaincodes/sample").peerNodeDTOS(peerNodeDTOS).build();
+        ApiHandler.installChainCode(client, installCCDTO);
+    }
+
+    //执行合约
+    //public void invokeChaincode(HFClient client, Channel channel, String chaincodeName, String[] str) throws Exception {
+    public void invokeChaincode(String chaincodeName, String[] str) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        /* 通道名称 */
+        //String channelName = "mychannel";
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Channel channel = ApiHandler.createChannel(client, "mychannel");
+        /* 智能合约配置信息 */
+        //String chaincodeName = "mycc";
+        ChaincodeID chaincodeID = null;
+        String chaincodeVersion = "1.0";
+        if(chaincodeName.equals("mycc")){
+            String chaincodePath = "github.com/chaincode_example02";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+        }else if(chaincodeName.equals("hashstore")){
+            String chaincodePath = "github.com/testchaincode";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }
+        // 1. 初始化客户端
+//        String mspPath = "crypto-config/peerOrganizations/org2.example.com/users/Admin@org2.example.com/msp/";
+//        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+//                .name("org2.example.com").mspId("Org2MSP").mspPath(mspPath).build();
+        //HFClient client = ApiHandler.clientBuild(buildClientDTO);
+
+        // 2. 创建通道
+        //Channel channel = ApiHandler.createChannel(client, channelName);
+
+        // 3. invoke
+        ExecuteCCDTO invokeCCDTO = new ExecuteCCDTO.Builder().funcName("invoke").params(str).chaincodeID(chaincodeID).build();
+        ApiHandler.invokeChainCode(client, channel, invokeCCDTO);
+
+    }
+
+    //查询合约
+    //public void queryChaincode(HFClient client, Channel channel, String chaincodeName, String[] str) throws Exception {
+    public void queryChaincode(String chaincodeName, String[] str) throws Exception {
+        String cxtPath = FabricService.class.getClassLoader().getResource("").getPath()+"fabric/";
+        /* 通道名称 */
+        //String channelName = "mychannel";
+        FabricStartConfig fabricConfig = new FabricStartConfig();
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = null;
+        try {
+            client = fabricConfig.clientBuild(buildClientDTO);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Channel channel = ApiHandler.createChannel(client, "mychannel");
+        /* 智能合约配置信息 */
+        ChaincodeID chaincodeID = null;
+        String chaincodeVersion = "1.0";
+        //如果部署了更多的合约，多加 ELSE IF，固定
+        //根据chaincodeName来使用不同的合约
+        if(chaincodeName.equals("mycc")){
+
+            String chaincodePath = "github.com/chaincode_example02";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }else if(chaincodeName.equals("hashstore")){
+
+            String chaincodePath = "github.com/testchaincode";
+            chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        }
+
+        ExecuteCCDTO querybCCDTO = new ExecuteCCDTO.Builder().funcName("query").params(str).chaincodeID(chaincodeID).build();
+        ApiHandler.queryChainCode(client, channel, querybCCDTO);
+    }
+
+
+
+
+
+}

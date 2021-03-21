@@ -1,0 +1,177 @@
+<!-- user表单弹窗 -->
+<form id="layui-form" lay-filter="layui-form" class="layui-form model-form">
+    <input type="hidden" id="id" name="id"/>
+    <div class="layui-form-item">
+
+        <div class="layui-inline">
+            <label class="layui-form-label">组织名称<br>OrgName</label>
+            <div class="layui-input-inline">
+                <input type="text" id="orgName" name="orgName" autocomplete="off" lay-reqtext="组织名称不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">证书路径<br>CryptoConfigPath</label>
+            <div class="layui-input-inline">
+                <input type="text" id="cryptoConfigPath" name="cryptoConfigPath" autocomplete="off"
+                       lay-reqtext="证书路径不能为空" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">组织<br>OrgMSPID</label>
+            <div class="layui-input-inline">
+                <input type="text" id="orgMspId" name="orgMspId" autocomplete="off" lay-reqtext="组织不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">排序域名<br>OrdererDomain</label>
+            <div class="layui-input-inline">
+                <input type="text" id="ordererDomain" name="ordererDomain" autocomplete="off" lay-reqtext="排序域名不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+
+
+
+        <div class="layui-inline">
+            <label class="layui-form-label">智能合约名称<br>chainCodeName</label>
+            <div class="layui-input-inline">
+                <input type="text" id="chainCodeName" name="chainCodeName" autocomplete="off" lay-reqtext="智能合约名称不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">智能合约版本<br>ChainCodeVersion</label>
+            <div class="layui-input-inline">
+                <input type="text" id="chainCodeVersion" name="chainCodeVersion" autocomplete="off"
+                       lay-reqtext="智能合约版本不能为空" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">智能合约路径<br>ChaincodePath</label>
+            <div class="layui-input-inline">
+                <input type="text" id="chainCodePath" name="chainCodePath" autocomplete="off" lay-reqtext="智能合约路径不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">智能合约源路径<br>ChainCodeSource</label>
+            <div class="layui-input-inline">
+                <input type="text" id="chainCodeSource" name="chainCodeSource" autocomplete="off"
+                       lay-reqtext="智能合约源路径不能为空" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">智能合约策略<br>ChainCodePolicy</label>
+            <div class="layui-input-inline">
+                <input type="text" id="chainCodePolicy" name="chainCodePolicy" autocomplete="off"
+                       lay-reqtext="智能合约策略不能为空" class="layui-input">
+            </div>
+        </div>
+
+
+
+
+
+
+        <div class="layui-inline">
+            <label class="layui-form-label">交易等待时间<br>InvokeWaitTime</label>
+            <div class="layui-input-inline">
+                <input type="text" id="invokeWaitTime" name="invokeWaitTime" autocomplete="off" lay-reqtext="交易等待时间不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">用户名称<br>UserName</label>
+            <div class="layui-input-inline">
+                <input type="text" id="userName" name="userName" autocomplete="off" lay-reqtext="用户名称不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">通道配置路径<br>ChannelArtifactsPath</label>
+            <div class="layui-input-inline">
+                <input type="text" id="channelArtifactsPath" name="channelArtifactsPath" autocomplete="off"
+                       lay-reqtext="通道配置路径不能为空" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">组织域名<br>OrgDomain</label>
+            <div class="layui-input-inline">
+                <input type="text" id="orgDomain" name="orgDomain" autocomplete="off" lay-reqtext="组织域名不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">通道名称<br>ChannelName</label>
+            <div class="layui-input-inline">
+                <input type="text" id="channelName" name="channelName" autocomplete="off" lay-reqtext="通道名称不能为空"
+                       class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-inline">
+            <label class="layui-form-label">提案等待时间<br>ProposalWaitTime</label>
+            <div class="layui-input-inline">
+                <input type="text" id="proposalWaitTime" name="proposalWaitTime" autocomplete="off"
+                       lay-reqtext="提案等待时间不能为空" class="layui-input">
+            </div>
+        </div>
+
+        <div class="layui-form-item model-form-footer">
+            <button class="layui-btn layui-btn-primary" type="button" ew-event="closeDialog">取消</button>
+            <button class="layui-btn" lay-filter="layui-form-submit" lay-submit>保存</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    layui.use(['layer', 'admin', 'form', 'laydate'], function () {
+        var layer = layui.layer;
+        var admin = layui.admin;
+        var form = layui.form;
+        var laydate = layui.laydate;
+
+        laydate.render({
+            elem: '#createDate',
+            format: 'yyyy-MM-dd'
+        });
+
+        form.render('radio');
+        form.render('select');
+        form.render('checkbox');
+
+        var url = 'fabric/fabricconfig/add';
+        // 回显user数据
+        var tempData = admin.getTempData('fabric_config_id');
+        if (tempData) {
+            url = 'fabric/fabricconfig/update';
+            $.post('fabric/fabricconfig/get?id=' + tempData, "", function (d) {
+                form.val('layui-form', d.data);
+                //$("#createDate").val( strtools.formatDate(d.data.createDate,"yyyy-MM-dd"));
+            });
+        }
+
+        // 表单提交事件
+        form.on('submit(layui-form-submit)', function (data) {
+            layer.load(2);
+            $.post(url, data.field, function (data) {
+                layer.closeAll('loading');
+                if (data.code == 200) {
+                    layer.msg(data.msg, {icon: 1});
+                    admin.finishPopupCenter();
+                } else {
+                    layer.msg(data.msg, {icon: 2});
+                }
+            });
+            return false;
+        });
+    });
+</script>
+<style>
+    .layui-form-label{padding:2px 15px;}
+    .layui-form-item .layui-input-inline{padding: 5px 0px 0px 0px;}
+</style>

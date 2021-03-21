@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="fastchaindb-cert" />
+        <module name="fastchaindb-mybatis" />
+        <module name="fastchaindb-sdk" />
+        <module name="fastchaindb-fabric" />
+        <module name="fastchaindb-eth" />
+        <module name="fastchaindb-core" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="fastchaindb" target="1.8" />
+      <module name="fastchaindb-cert" target="7" />
+      <module name="fastchaindb-core" target="1.8" />
+      <module name="fastchaindb-eth" target="1.8" />
+      <module name="fastchaindb-fabric" target="1.8" />
+      <module name="fastchaindb-mybatis" target="1.8" />
+      <module name="fastchaindb-sdk" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="fastchaindb-cert" options="-parameters" />
+      <module name="fastchaindb-core" options="-parameters" />
+      <module name="fastchaindb-eth" options="-parameters" />
+      <module name="fastchaindb-fabric" options="-parameters" />
+      <module name="fastchaindb-mybatis" options="-parameters" />
+    </option>
+  </component>
+</project>

@@ -1,0 +1,42 @@
+package com.oschain.fastchaindb.blockchain.dto;
+
+public class FCDBTransationQuery extends FCDBPairKey {
+    private static final long serialVersionUID = 1L;
+
+    private String transactionId;
+    private String transactionData;
+    private Integer blockHeight;
+    private String blockHash;
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
+    public String getTransactionData() {
+        return transactionData;
+    }
+
+    public void setTransactionData(String transactionData) {
+        this.transactionData = transactionData;
+    }
+
+    public Integer getBlockHeight() {
+        return blockHeight;
+    }
+
+    public void setBlockHeight(Integer blockHeight) {
+        this.blockHeight = blockHeight;
+    }
+
+    public String getBlockHash() {
+        return blockHash;
+    }
+
+    public void setBlockHash(String blockHash) {
+        this.blockHash = blockHash;
+    }
+}

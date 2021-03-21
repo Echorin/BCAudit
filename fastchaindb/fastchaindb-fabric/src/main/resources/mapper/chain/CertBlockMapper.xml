@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.oschain.fastchaindb.chainsql.dao.CertBlockMapper">
+	<select id="listCertBlock" resultType="com.oschain.fastchaindb.chainsql.model.CertBlock">
+		select transaction_id,block_hash
+		from cert_block
+		<where>
+			<if test="blockBody != null">
+				AND block_body like CONCAT('%',#{blockBody},'%')
+			</if>
+			<if test="blockKey1 != null">
+				AND block_key1 like CONCAT('%',#{blockKey1},'%')
+			</if>
+			<if test="blockKey2 != null">
+				AND block_key2 like CONCAT('%',#{blockKey2},'%')
+			</if>
+			<if test="blockKey3 != null">
+				AND block_key3 like CONCAT('%',#{blockKey3},'%')
+			</if>
+			<if test="blockKey4 != null">
+				AND block_key4 like CONCAT('%',#{blockKey4},'%')
+			</if>
+			<if test="blockKey5 != null">
+				AND block_key5 like CONCAT('%',#{blockKey5},'%')
+			</if>
+		</where>
+		ORDER BY create_time DESC
+	</select>
+
+    <!-- 修改 -->
+	<update id="updateByTranId" parameterType="com.oschain.fastchaindb.chainsql.model.CertBlock">
+		update cert_block set
+			block_hash = #{blockHash},
+			block_time = #{blockTime},
+			block_status = #{blockStatus},
+			last_check_time = now()
+		where transaction_id = #{transactionId}
+	</update>
+
+	<!-- 修改 -->
+	<update id="updateLastTimeByTranId" parameterType="com.oschain.fastchaindb.chainsql.model.CertBlock">
+		update cert_block set last_check_time = #{lastCheckTime}
+		where transaction_id = #{transactionId}
+	</update>
+
+	<update id="updateLastTimeByTranIds"  parameterType="java.util.List">
+		UPDATE cert_block set last_check_time = now()
+		WHERE transaction_id IN
+		<foreach collection="list" item="item" index="index" open="(" close=")" separator=",">
+			#{item.transactionId}
+		</foreach>
+	</update>
+
+
+</mapper>

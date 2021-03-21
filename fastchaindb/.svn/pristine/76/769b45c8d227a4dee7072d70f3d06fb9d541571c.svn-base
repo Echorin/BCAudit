@@ -1,0 +1,464 @@
+package com.oschain.fastchaindb.common.config;
+
+import com.alibaba.druid.pool.DruidDataSource;
+import com.baomidou.mybatisplus.mapper.SqlHelper;
+import com.hyperledger.fabric.sdk.entity.dto.EnrollmentDTO;
+import com.hyperledger.fabric.sdk.entity.dto.UserContextDTO;
+import com.hyperledger.fabric.sdk.entity.dto.api.*;
+import com.hyperledger.fabric.sdk.exception.FabricSDKException;
+import com.hyperledger.fabric.sdk.handler.ApiHandler;
+import com.hyperledger.fabric.sdk.test.APITest;
+import com.hyperledger.fabric.sdk.utils.HFSDKUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.hyperledger.fabric.sdk.*;
+import org.hyperledger.fabric.sdk.helper.Config;
+import org.hyperledger.fabric.sdk.security.CryptoSuite;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.ContextLoader;
+import org.springframework.web.context.WebApplicationContext;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisException;
+
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.security.PrivateKey;
+import java.sql.*;
+import java.util.*;
+
+import static com.hyperledger.fabric.sdk.common.Config.*;
+import static com.hyperledger.fabric.sdk.common.Config.PEER1_ORG1_EVENT_URL;
+import static com.hyperledger.fabric.sdk.common.Constants.REDIS_PREFIX;
+import static com.hyperledger.fabric.sdk.logger.Logger.debug;
+import static com.hyperledger.fabric.sdk.logger.Logger.warn;
+import static com.hyperledger.fabric.sdk.utils.FileUtils.getFile;
+import static com.hyperledger.fabric.sdk.utils.FileUtils.getPrivateKeyFromBytes;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+@Configuration
+public class FabricConfig {
+    private static final Logger logger = LoggerFactory.getLogger(FabricConfig.class);
+
+    /**
+     * 超时时间, 单位: S
+     */
+    private static final Integer TIME_OUT = 50;
+    /**
+     * channel redis中的key的前缀
+     */
+    private static final String CHANNEL_CACHE = REDIS_PREFIX + "channel:";
+    private static final String REDIS_SEPERATOR = "@";
+
+    private static Boolean channelIsExist=false;
+
+//    @Value("${redis.host}")
+//    private String host;
+//
+//    @Value("${redis.port}")
+//    private int port;
+
+
+    private static String cxtPath = FabricConfig.class.getClassLoader().getResource("").getPath() + "fabric/";
+    /* 通道名称 */
+    public static String channelName = "mychannel";
+    public static String chaincodeName = "hashstore";//"mycc";//
+
+    @Autowired
+    private JedisPool jedisPool;
+
+    @Autowired
+    private DataSource dataSource;
+
+    //    @Bean(name = "jedisPool")
+//    public JedisPool jedisPool() {
+//        logger.info("JedisPool注入成功！！");
+//        logger.info("redis地址：" + host + ":" + port);
+//        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+//        jedisPoolConfig.setMaxIdle(300);
+//        jedisPoolConfig.setMaxWaitMillis(5000);
+//        // 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true
+//        jedisPoolConfig.setBlockWhenExhausted(false);
+//        // 是否启用pool的jmx管理功能, 默认true
+//        jedisPoolConfig.setJmxEnabled(true);
+//        JedisPool jedisPool = new JedisPool(jedisPoolConfig, host, port, 5000);
+//        return jedisPool;
+//    }
+    @Bean(name = "hfClient")
+    public HFClient hfClient() throws Exception {
+
+        Connection conn = dataSource.getConnection();
+        PreparedStatement pstmt = conn.prepareStatement("select * from cert_info");
+        ResultSet rs = pstmt.executeQuery();
+        List<Map<String, Object>> list = ConvertList(rs);//数据集
+
+        if (rs != null) {
+            rs.close();
+        }
+        if (pstmt != null) {
+            pstmt.close();
+        }
+        if (conn != null) {
+            conn.close();
+        }
+
+//        SqlSession  session= SqlHelper.sqlSession(Authorities.class);
+        String cxtPath = FabricConfig.class.getClassLoader().getResource("").getPath() + "fabric/";
+
+        // 加载配置文件
+        System.setProperty(Config.ORG_HYPERLEDGER_FABRIC_SDK_CONFIGURATION, cxtPath + "config.properties");
+
+
+        /* 通道名称 */
+        String channelName = "mychannel";
+
+        /* 智能合约配置信息 */
+        String chaincodeName = "hashstore";
+        String chaincodeVersion = "1.0";
+        String chaincodePath = "github.com/testchaincode";
+        ChaincodeID chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        // 1. 初始化客户端
+        System.out.println("第一步");
+        String mspPath = cxtPath + "crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+        HFClient client = this.clientBuild(buildClientDTO);
+
+        // 2. 创建通道
+        System.out.println("第二步");
+        Collection<OrderNodeDTO> orderNodeDTOS = new ArrayList<>();
+        orderNodeDTOS.add(new OrderNodeDTO(ORDER_NAME, ORDER_GRPC_URL));
+
+        Collection<PeerNodeDTO> peerNodeDTOS = new ArrayList<>();
+        peerNodeDTOS.add(new PeerNodeDTO(PEER0_ORG1_NAME, PEER0_ORG1_GRPC_URL, PEER0_ORG1_EVENT_URL));
+        //peerNodeDTOS.add(new PeerNodeDTO(PEER1_ORG1_NAME, PEER1_ORG1_GRPC_URL, PEER1_ORG1_EVENT_URL));
+
+        CreateChannelDTO createChannelDTO = new CreateChannelDTO();
+        createChannelDTO.setChannelConfigPath(cxtPath + "channel-artifacts/channel.tx");
+        createChannelDTO.setOrderNodeDTOS(orderNodeDTOS);
+        createChannelDTO.setPeerNodeDTOS(peerNodeDTOS);
+        Channel channel = this.createChannel(client, channelName, createChannelDTO, true);// createChannelDTO, false
+
+        if(!channelIsExist){
+            // 3. 安装智能合约
+            System.out.println("第三步");
+            InstallCCDTO installCCDTO = new InstallCCDTO.Builder().chaincodeID(chaincodeID).chaincodeSourceLocation(cxtPath + "chaincodes/sample").peerNodeDTOS(peerNodeDTOS).build();
+            ApiHandler.installChainCode(client, installCCDTO);
+
+
+            // 5. 初始化智能合约
+            System.out.println("第四步");
+            ExecuteCCDTO initCCDTO = new ExecuteCCDTO.Builder().funcName("init").params(new String[]{""}).chaincodeID(chaincodeID).policyPath(cxtPath + "policy/chaincodeendorsementpolicy.yaml").build();
+            ApiHandler.initializeChainCode(client, channel, initCCDTO);
+        }
+
+        // 6. 测试智能合约invoke
+        System.out.println("第五步");
+        ExecuteCCDTO invokeCCDTO = new ExecuteCCDTO.Builder().funcName("invoke").params(new String[]{"test", "hello blockchain"}).chaincodeID(chaincodeID).build();
+        ApiHandler.invokeChainCode(client, channel, invokeCCDTO);
+
+
+        // 7. 测试智能合约query
+        System.out.println("第六步");
+        ExecuteCCDTO invokeCCDTO1 = new ExecuteCCDTO.Builder().funcName("query").params(new String[]{"test"}).chaincodeID(chaincodeID).build();
+        ApiHandler.queryChainCode(client, channel, invokeCCDTO1);
+
+
+        return client;
+    }
+
+    @Bean(name = "chaincodeID")
+    @DependsOn("hfClient")
+    public ChaincodeID chaincodeID() {
+//
+//        JedisUtils j=new JedisUtils();
+//        j.s();
+
+        /* 智能合约配置信息 */
+        String chaincodeVersion = "1.0";
+        String chaincodePath = "github.com/testchaincode";
+        //String chaincodePath = "github.com/chaincode_example02";
+        ChaincodeID chaincodeID = ChaincodeID.newBuilder().setName(chaincodeName).setVersion(chaincodeVersion).setPath(chaincodePath).build();
+
+        return chaincodeID;
+    }
+
+//    @Bean(name = "hfClient")
+//    @DependsOn("fabricInit")
+//    public HFClient hfClient() {
+//
+//        //Jedis jedis = jedisPool().getResource();
+//
+//        String mspPath = cxtPath+"crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp/";
+//        BuildClientDTO buildClientDTO = new BuildClientDTO.Builder()
+//                .name("org1.example.com").mspId("Org1MSP").mspPath(mspPath).build();
+//
+//        HFClient client = null;
+//        try {
+//            client = this.clientBuild(buildClientDTO);
+//            this.createChannel(client, channelName,null,true);//装载通道
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//
+//        return client;
+//    }
+
+    /**
+     * Star - 构建客户端实例
+     *
+     * @param buildClientDTO {@link BuildClientDTO}
+     * @return HFClient
+     * @throws Exception e
+     */
+    public HFClient clientBuild(BuildClientDTO buildClientDTO) throws Exception {
+        debug("构建Hyperledger Fabric客户端实例 Start...");
+        HFClient client = HFClient.createNewInstance();
+        client.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
+
+        String mspPath = buildClientDTO.getMspPath();
+
+        File certFile, keyFile;
+        if (StringUtils.isNotEmpty(mspPath)) {
+            certFile = getFile(mspPath + "signcerts", null);
+            keyFile = getFile(mspPath + "keystore", "_sk");
+        } else {
+            certFile = new File(buildClientDTO.getCertPath());
+            keyFile = new File(buildClientDTO.getKeyPath());
+        }
+
+        InputStream certFileIS = new FileInputStream(certFile);
+        String cert = new String(IOUtils.toByteArray(certFileIS), UTF_8);
+
+        InputStream keyFileIS = new FileInputStream(keyFile);
+        PrivateKey key = getPrivateKeyFromBytes(IOUtils.toByteArray(keyFileIS));
+
+        String name = buildClientDTO.getName();
+        String mspid = buildClientDTO.getMspId();
+        Enrollment enrollmentDTO = new EnrollmentDTO(cert, key);
+
+        User user = new UserContextDTO(name, mspid, enrollmentDTO);
+        client.setUserContext(user);
+        debug("构建Hyperledger Fabric客户端实例 End!!!");
+        return client;
+    }
+
+    /**
+     * Star - 创建通道, 包含了加入的peer节点
+     *
+     * @param client           客户端实例
+     * @param channelName      通道名称
+     * @param createChannelDTO {@link CreateChannelDTO}
+     * @param useCache         是否优先使用已缓存的通道对象
+     * @return {@link Channel}
+     * @throws Exception e
+     */
+    public Channel createChannel(HFClient client, String channelName, CreateChannelDTO createChannelDTO, boolean useCache) throws Exception {
+        debug("创建通道 Start, channelName: %s.", channelName);
+        String mspId = client.getUserContext().getMspId();
+        if (StringUtils.isEmpty(mspId)) throw new FabricSDKException("mspId must not to be empty.");
+        String redisKey = CHANNEL_CACHE + channelName + REDIS_SEPERATOR + mspId;
+
+        Channel channel;
+        // 优先使用缓存中已缓存的通道对象
+        if (useCache) {
+
+            //redisUtil.set("aa","111");
+            //Jedis jedis =  jedisPool.getResource();
+
+            byte[] bytes = get(redisKey.getBytes());
+            if (bytes != null) {
+                warn("缓存中已存在通道名称为: %s 的通道对象, 使用缓存中的通道对象, 缓存Key: %s.", channelName, redisKey);
+                channel = client.deSerializeChannel(bytes);
+                if (!channel.isInitialized()) channel.initialize();
+                debug("创建通道 End, channelName: %s, isInitialized: %b.", channelName, channel.isInitialized());
+
+                channelIsExist=true;
+
+                return channel;
+            }
+            //throw new FabricSDKException("缓存数据为空, 操作缓存失败. key=" + redisKey);
+        }
+
+        File channelFile = new File(createChannelDTO.getChannelConfigPath());
+        ChannelConfiguration channelConfiguration = new ChannelConfiguration(channelFile);
+
+        Collection<OrderNodeDTO> orderNodeDTOS = createChannelDTO.getOrderNodeDTOS();
+        OrderNodeDTO orderNodeDTO = orderNodeDTOS.iterator().next();
+        Orderer orderer = client.newOrderer(orderNodeDTO.getNodeName(), orderNodeDTO.getGrpcUrl(), orderNodeDTO.getProperties());
+        channel = client.newChannel(channelName, orderer, channelConfiguration, client.getChannelConfigurationSignature(channelConfiguration, client.getUserContext()));
+        // 把 orderer 节点加入通道
+        channel.addOrderer(orderer);
+        debug("order节点: %s 已成功加入通道.", orderer.getName());
+
+        // 把 peer 节点加入通道
+        Collection<PeerNodeDTO> peerNodeDTOS = createChannelDTO.getPeerNodeDTOS();
+        this.joinPeers(client, channel, peerNodeDTOS);
+
+        debug("创建通道 End, channelName: %s, isInitialized: %b.", channelName, channel.isInitialized());
+        // 如果已连接redis, 则将 channel 对象存储进缓存
+        set(redisKey.getBytes(), channel.serializeChannel());
+//        if (jedis.isConnected()) {
+//            jedis.set(redisKey.getBytes(), channel.serializeChannel());
+//            info("通道对象已放入redis缓存, 缓存key: %s.", redisKey);
+//        }
+
+
+        HFSDKUtils.serialize2File(channel, mspId);
+        return channel;
+    }
+
+
+    /**
+     * Star - 将指定peer节点加入通道
+     *
+     * @param client       客户端实例
+     * @param channel      通道对象
+     * @param peerNodeDTOS 节点信息
+     */
+    private void joinPeers(HFClient client, Channel channel, Collection<PeerNodeDTO> peerNodeDTOS) throws Exception {
+        for (PeerNodeDTO peerNodeDTO : peerNodeDTOS) {
+            Peer peer = client.newPeer(peerNodeDTO.getNodeName(), peerNodeDTO.getGrpcUrl(), peerNodeDTO.getProperties());
+            channel.joinPeer(peer);
+            debug("peer节点: %s 已成功加入通道.", peerNodeDTO.getNodeName());
+        }
+        if (!channel.isInitialized()) {
+            channel.initialize();
+        }
+    }
+
+
+    /**
+     * 获取缓存
+     *
+     * @param key 键
+     * @return 值
+     */
+    public byte[] get(byte[] key) {
+        byte[] value = null;
+        Jedis jedis = null;
+        try {
+            jedis = this.getResource();
+            if (jedis.exists(key)) {
+                value = jedis.get(key);
+                logger.debug("get {} = {}", key, value);
+            }
+        } catch (Exception e) {
+            logger.warn("get {} = {}", key, value, e);
+        } finally {
+            returnResource(jedis);
+        }
+        return value;
+    }
+
+    /**
+     * 设置缓存
+     *
+     * @param key          键
+     * @param value        值
+     * @param cacheSeconds 超时时间，0为不超时
+     * @return
+     */
+    public String set(byte[] key, byte[] value) {
+        String result = null;
+        Jedis jedis = null;
+        try {
+            jedis = this.getResource();
+            result = jedis.set(key, value);
+            logger.debug("set {} = {}", key, value);
+        } catch (Exception e) {
+            logger.warn("set {} = {}", key, value, e);
+        } finally {
+            returnResource(jedis);
+        }
+        return result;
+    }
+
+    /**
+     * 获取资源
+     *
+     * @return
+     * @throws JedisException
+     */
+    public Jedis getResource() throws JedisException {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+//			logger.debug("getResource.", jedis);
+        } catch (JedisException e) {
+            logger.warn("getResource.", e);
+            returnBrokenResource(jedis);
+            throw e;
+        }
+        return jedis;
+    }
+
+    /**
+     * 归还资源
+     *
+     * @param jedis
+     */
+    public void returnBrokenResource(Jedis jedis) {
+        if (jedis != null) {
+            jedisPool.returnBrokenResource(jedis);
+        }
+    }
+
+    /**
+     * 释放资源
+     *
+     * @param jedis
+     */
+    public void returnResource(Jedis jedis) {
+        if (jedis != null) {
+            jedisPool.returnResource(jedis);
+        }
+    }
+
+
+    public List<Map<String, Object>> ConvertList(ResultSet rs) {
+        List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+        if (rs == null)
+            return list;
+
+        try {
+            ResultSetMetaData md = rs.getMetaData();
+            int columnCount = md.getColumnCount();
+            while (rs.next()) {
+                Map<String, Object> map = new LinkedHashMap<String, Object>();
+                for (int i = 1; i <= columnCount; i++) {
+                    // if (Types.CLOB == md.getColumnType(i)) {
+                    // Clob clob = (Clob) rs.getObject(i);
+                    // map.put(md.getColumnName(i), ClobToString(clob));
+                    // } else {
+
+                    map.put(md.getColumnLabel(i).toLowerCase(), rs.getObject(i));
+                    //map.put(md.getColumnName(i).toLowerCase(), rs.getObject(i)); orc
+                    // }
+                }
+                list.add(map);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+}

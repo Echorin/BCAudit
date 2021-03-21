@@ -1,0 +1,13 @@
+## 开发环境配置
+##
+## 数据源配置
+spring.datasource.url=jdbc:mysql://localhost:3306/bigchaindb?useUnicode=true&characterEncoding=utf8
+spring.datasource.username=root
+spring.datasource.password=root
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+##
+##日志配置
+logging.level.com.oschain.fastchaindb=DEBUG
+logging.level.com.baomidou.mybatisplus=DEBUG
+logging.path=d://tmp

@@ -1,0 +1,94 @@
+<% include("../layout/jsPart.html"){} %>
+<!--<% include("../layout/headerOut.html"){} %>-->
+
+<link rel="stylesheet" href="../../assets/css/certinfo_block.css" />
+
+
+<form id="user-form">
+<article class="detail-table column center">
+    <h1>区块信息</h1>
+    <table id="DIRECTORY-BLOCK">
+        <tbody><tr>
+            <td>区块高度:</td>
+            <td><span dbfield="blockHeight"></span></td>
+        </tr>
+        <tr>
+            <td>前一区块哈希值:</td>
+            <td>
+                <a href="javascript:void(0)" id="prevBlockHash">
+                    <span dbfield="prevBlockHash">000</span>
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td>区块哈希值:</td>
+            <td><span dbfield="blockHash">000</span></td>
+        </tr>
+        <tr style="display: none">
+            <td>后一区块哈希值:</td>
+            <td>
+                <a href="javascript:void(0)">000</a>
+            </td>
+        </tr>
+        <tr>
+            <td>创建时间:</td>
+            <td><span dbfield="blockTime">2019-01-01 00:00:00</span></td>
+        </tr>
+        <tr style="display: none">
+            <td>BROP Transaction:</td>
+            <td><a target="_blank" href="javascript:void(0)">000</a>  &nbsp;&nbsp;&nbsp;&nbsp;  2019-01-01 00:00:00</td>
+        </tr>
+        </tbody>
+    </table>
+</article>
+</form>
+
+<article class="detail-table column center">
+    <h1>交易信息</h1>
+    <div id="blockBody"></div>
+</article>
+
+
+<script id="test" type="text/html">
+
+    {{each transactionList as value index}}
+
+    <table id="ENTRY-BLOCKS">
+        <tbody>
+        <tr>
+            <td>交易值:</td>
+            <td>{{value.transactionId}}</td>
+        </tr>
+        <tr>
+            <td>存证文件哈希值:</td>
+            <td>{{value.transactionData}}</td>
+        </tr>
+        <tr>
+            <td>创建时间:</td>
+            <td>{{value.transactionTime}}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    {{/each}}
+
+</script>
+
+<script>
+
+    layui.use(['layer','form'], function () {
+        var layer = layui.layer;
+        var form = layui.form;
+
+        var transactionid = "${transactionid}";
+        var url="/proof/info/blockdata?transactionid="+transactionid;
+
+        $.post(url, "", function (data) {
+            var chainblock=data.chainblock;
+            kevin.loadForm("user-form",chainblock);
+            var html = template('test', chainblock);
+            $("#blockBody").html(html);
+        });
+    });
+
+</script>

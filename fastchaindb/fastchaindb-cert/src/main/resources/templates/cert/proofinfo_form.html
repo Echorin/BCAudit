@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<script type="text/javascript" src="${ctxPath}/assets/libs/uploadify/jquery.min.js"></script>
+<script type="text/javascript" src="${ctxPath}/assets/libs/layui/layui.js"></script>
+<script type="text/javascript" src="${ctxPath}/assets/libs/uploadify/jquery.uploadifive.min.js"></script>
+
+<link rel="stylesheet" href="${ctxPath}/assets/libs/uploadify/uploadifive.css"/>
+<link rel="stylesheet" href="${ctxPath}/assets/libs/layui/css/layui.css"/>
+<link rel="stylesheet" href="${ctxPath}/assets/css/admin.css"/>
+
+
+<style>
+    html{background-color:#fff}
+    #uploadifive-file_upload{
+        background-image: url(../../assets/images/login_bg.jpg);
+    }
+</style>
+<script type="text/javascript">
+    $(function() {
+        $('#file_upload').uploadifive({
+            'auto'             : true,//如果是fasle，下面HTML中的上传文件代码需要启用。
+            'buttonClass': 'btn',
+            'fileType':'image',//允许上传的文件类型
+            'buttonText': "选择文件",
+            'multi' : false,
+            'fileSizeLimit'   : 5242880,
+            'uploadLimit' : 1,
+            'queueSizeLimit'  : 1,
+            'queueID'          : 'uploadqueue',
+            'fileObjName':'uploadImg',//定义上传数据处理文件中接收数据使用的文件对象名
+            'uploadScript'     : '/proof/info/uploadsave',
+            'onUploadComplete' : function(file, data) {
+                //debugger;
+                var obj = JSON.parse(data);
+                if (obj.code == 200) {
+                    $("#fileId").val(obj.msg);
+                    $("#uploadifive-file_upload").hide();
+                    document.getElementById("btnSubmitFile").disabled = false;
+                }
+                console.log(data);
+            },
+            onCancel : function(file) {
+                $("#uploadifive-file_upload").show();
+                alert(file.name +","+$("#fileId").val()+ " 已取消上传~!");
+            },
+            onFallback : function() {
+                alert("该浏览器无法使用!");
+            },
+            onUpload : function(file) {
+                document.getElementById("btnSubmitFile").disabled = true;//当开始上传文件，要防止上传未完成而表单被提交
+            }
+        });
+    });
+</script>
+
+<body>
+
+<!-- user表单弹窗 -->
+<form id="user-form" lay-filter="user-form" class="layui-form model-form">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">存证类型</label>
+        <div class="layui-input-block">
+            <input type="radio" name="fileType" value="0" title="文档" checked/>
+            <input type="radio" name="fileType" value="1" title="图片"/>
+            <input type="radio" name="fileType" value="2" title="音频"/>
+            <input type="radio" name="fileType" value="3" title="视频"/>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">存证标签</label>
+        <div class="layui-input-block">
+            <input name="fileTag" placeholder="文件标签" type="text" class="layui-input" maxlength="20"
+                   lay-verify="required" required/>
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <div id="uploadqueue"></div>
+                <input id="file_upload" name="file_upload" type="file" multiple="true">
+                <input id="fileId" name="fileId" type="hidden"  placeholder="存证文件"  lay-verify="required" required/>
+                <div style="display:none;">
+                    <a href="javascript:$('#file_upload').uploadifive('upload')">上传文件</a> |
+                    <a href="javascript:$('#file_upload').uploadifive('stop')">停止上传!</a>
+                </div>
+
+        </div>
+    </div>
+
+
+    <div class="layui-form-item model-form-footer">
+        <button class="layui-btn layui-btn-primary" type="button" onclick="cancel()" ew-event="closeDialog">取消</button>
+        <button id="btnSubmitFile" class="layui-btn" lay-filter="prooffile-form-submit" lay-submit>存证</button>
+    </div>
+</form>
+
+
+<script>
+    layui.use(['layer','form'], function () {
+        var layer = layui.layer;
+        //var admin = layui.admin;
+        var form = layui.form;
+
+        form.render('radio');
+        //form.render('select');
+
+        var url="/proof/info/save";
+        console.log("/proof/info/save");
+        // 表单提交事件
+        form.on('submit(prooffile-form-submit)', function (data) {
+            console.log(data);
+            console.log("---/proof/info/save");
+            layer.load(2);
+            $.post(url, data.field, function (data) {
+                layer.closeAll('loading');
+                if (data.code == 200) {
+                    layer.msg(data.msg, {icon: 1});
+                    //admin.finishPopupCenter();
+                    parent.closeClassModal(1);
+                } else {
+                    layer.msg(data.msg, {icon: 2});
+                }
+            });
+            return false;
+        });
+    });
+
+    function cancel() {
+        parent.closeClassModal(0);
+    }
+
+</script>
+
+
+
+</body>
+</html>

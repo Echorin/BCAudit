@@ -1,0 +1,227 @@
+<% include("../layout/jsPart.html"){} %>
+<!--<% include("../layout/headerOut.html"){} %>-->
+
+<link rel="stylesheet" href="../../assets/css/certinfo_view.css" />
+<link rel="stylesheet" href="../../assets/libs/layui/css/layui.css" />
+<link rel="stylesheet" href="../../assets/css/iconfont-block.woff" />
+
+<form id="user-form">
+<div id="root">
+    <div class="content-height" id="content-height" style="min-width: 1000px;">
+        <div>
+            <div class="attestations show attestation-mob" style="display: block;">
+                <!-- react-text: 17 -->
+                <!-- /react-text -->
+                <div class="page-height">
+                    <div class="zoom">
+                        <div class="block-chain">
+                            <div class="block-chain-title">
+                                <span>区块链验证</span></div>
+                            <div class="chain" style="margin-top: 20px;">
+                                <p class="block-chain-hash">
+                                    <span style="line-height: 18px; height: 18px">存证文件哈希值</span>
+                                <div class="hash-mob" style="display: flex; align-items: center; flex-wrap: wrap;">
+                                    <span></span>
+                                </div>
+                                <span style="margin-left: 3px; width: 16px; height: 16px; color: #138efe; text-align: center;
+                                            line-height: 16px;"  dbfield="fileHash">5137ac749cff5510d694ec1f00249dbb05e6f271b6945c777f3b1f6300e3a943</span>
+                                <span class="help-icon" style="display: inline-block; margin-left: 3px; width: 16px;
+                                            height: 16px; color: #fff; text-align: center; line-height: 16px; border-radius: 8px;
+                                            background-color: #ccc; display: none">?</span>
+                                </p>
+                            </div>
+                            <div class="block-chain-item">
+                                <span class="chain-name">Fabric</span><div class="info" style="height: 110px;
+                                        line-height: 25px">
+                                <p class="description">
+                                    文件是基于Fabric区块链定制开发存证平台。</p>
+                                <p>
+                                        <span class="hash">区块链状态值</span>
+                                        <span class="hash-code">创建交易</span> <i class="iconfont font-status active" style="right: 20px;"></i>
+                                        <span class="hash-code">共识中</span> <i class="iconfont font-status active" style="right: 20px;"></i>
+                                        <span class="hash-code">上链完成</span> <i class="iconfont font-status inactive" style="right: 20px;"></i>
+                                </p>
+                                <p>
+                                    <span class="hash">区块链交易值</span>
+                                    <span class="hash-code" id="transactionId" dbfield="transactionId">d0378d10751e42a199da5e1c80580db60f2e84dbe8f39e1016e6c717392a6a69</span>
+                                </p>
+                                <p  class="xchain" style="display: none">
+                                    <span class="hash">区块链哈希值</span>
+                                    <span class="hash-code" dbfield="blockHash">d0378d10751e42a199da5e1c80580db60f2e84dbe8f39e1016e6c717392a6a69</span>
+                                </p>
+                            </div>
+                                <i class="iconfont font-dui" style="position: absolute; right: 20px;"></i>
+                            </div>
+
+                            <div class="result xchain" style="display: none">
+                                <i class="iconfont font-dui"></i>
+                                <p>
+                                    比对结果一致，数据未被篡改。
+                                    <span style="font-size: 20px; color: #1E9FFF">最后验证时间：</span><span dbfield="lastCheckTime" id="lastCheckTime" style="font-size: 16px; color: #0a1e3e"></span>
+                                    <i class="layui-icon layui-icon-refresh-3" id="refreshBlock" style="float: right;font-size: 20px;color: #00bfa5;margin: 4px 6px;cursor:pointer"></i>
+                                </p>
+                            </div>
+
+                        </div>
+                        <div class="attestation-actions xchain" style="display: none">
+                            <a class="btn att-btn-success download-pdf downloadable" style="background-color: rgb(0, 154, 255);" target="_blank" href="/cert/info/block?transactionid=${transactionid}">
+                                <span>查看详情</span></a></div>
+                        <div class="attestation-actions xchain" style="top: 230px;display: none">
+                            <button id="print-btn" class="btn att-btn-success download-pdf downloadable" style="background-color: rgb(0, 154, 255);">
+                                打印证书</button>
+                        </div>
+                       <div class="attestation-actions xchain" style="top: 300px;display: none">
+                            <a class="btn att-btn-success download-pdf downloadable" target="_blank" href="/cert/info/downfile?fileid=${fileid}">
+                                <span>下载证据</span>
+                            </a>
+                       </div>
+                    </div>
+
+                    <div class="attestation-result">
+                        <div>
+                            <!--startprint-->
+                            <div style="word-break: break-all; word-wrap: break-word;" class="page cert-cover theme-3">
+                                <h2 class="cert-cover-title">
+                                    电子数据存证单</h2>
+                                <h3 class="cert-cover-bq-number">
+                                    凭证号：<span dbfield="fileId" class="xfield"></span></h3>
+                                <div class="cert-cover-content">
+                                    <table>
+                                        <tbody>
+                                        <tr>
+                                            <td>
+                                                存证人：
+                                            </td>
+                                            <td>
+                                                <span dbfield="nickName" class="xfield"></span>&nbsp;
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                联系方式：
+                                            </td>
+                                            <td>
+                                                <span dbfield="phone" class="xfield"></span>&nbsp;
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                身份证：
+                                            </td>
+                                            <td>
+                                                <span dbfield="idcard" class="xfield"></span>&nbsp;
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td>
+                                                文件名称：
+                                            </td>
+                                            <td>
+                                                <span dbfield="fileName" class="xfield"></span>&nbsp;
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                文件大小：
+                                            </td>
+                                            <td>
+                                                <span dbfield="fileSize" class="xfield"></span>&nbsp;字节
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                存证时间：
+                                            </td>
+                                            <td>
+                                                <span dbfield="createTime" class="xfield"></span>&nbsp;
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="cert-cover-footer">
+                                    <h5 class="cert-cover-h5">
+                                        证书说明：</h5>
+                                    <ol>
+                                        <li>本证书数据保存在区块链中。</li>
+                                        <li>本证书可作为电子数据备案凭证。</li>
+                                        <li>如需验证电子数据的一致性和存证时间，可通过平台进行查询或申办公证。</li>
+                                    </ol>
+                                </div>
+                                <div class="cert-seal">
+                                    &nbsp;
+                                </div>
+                            </div>
+                            <!--endprint-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+
+<script>
+    layui.use(['layer','form'], function () {
+        var layer = layui.layer;
+        var form = layui.form;
+
+        var fileid = "${fileid}";
+        var url="/cert/info/dataview?fileid="+fileid;
+
+        $.post(url, "", function (data) {
+            var user=data.user;
+            var fileinfo=data.file;
+
+            if(fileinfo!=null){
+                for (var obj in fileinfo) {
+                    user[obj] = fileinfo[obj];
+                }
+            }
+
+            kevin.loadForm("user-form",user);
+            if(fileinfo.blockStatus==1){
+                $(".xchain").show();
+                $(".inactive").removeClass("inactive").addClass("active");
+            }
+        });
+
+        // 添加按钮点击事件
+        $('#print-btn').click(function () {
+
+            // bdhtml=window.document.body.innerHTML;
+            // sprnstr="<!--startprint-->"; //开始打印标识字符串有17个字符
+            // eprnstr="<!--endprint-->"; //结束打印标识字符串
+            // prnhtml=bdhtml.substr(bdhtml.indexOf(sprnstr)+17); //从开始打印标识之后的内容
+            // prnhtml=prnhtml.substring(0,prnhtml.indexOf(eprnstr)); //截取开始标识和结束标识之间的内容
+            // window.document.body.innerHTML=prnhtml; //把需要打印的指定内容赋给body.innerHTML
+            // window.print(); //调用浏览器的打印功能打印指定区域
+            // window.document.body.innerHTML=bdhtml;//重新给页面内容赋值；
+            // window.close();
+            // window.open('/cert/info/view?fileid='+fileid);
+            window.print();
+            window.close();
+            // window.location.replace('/cert/info/view?fileid='+fileid);
+            window.open('/cert/info/view?fileid='+fileid);
+        });
+
+        $(document).on('click','#refreshBlock',function(){
+            var rfurl="/cert/info/refresh?fileid="+fileid;
+            $.post(rfurl, "", function (data) {
+                $("#lastCheckTime").html(data.msg);
+            });
+        });
+
+    });
+
+
+</script>
+
+<style media="print">
+    @page {
+        size: auto;  /* auto is the initial value */
+        margin: 0mm; /* this affects the margin in the printer settings */
+    }
+</style>

@@ -1,0 +1,989 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Tables SqlSessionFactory="sqlSessionFactory">
+<!-- OrderBy必须设置而且最好为主键，不然排序会乱  -->
+    <Table TitleName="标准查询模板" TableName="com.united.module.test.dao.TestDao.getListData" TableUrl="sys_users" TableType="select" DataType="mapping" OpenSize="300,400">
+        <Fields>
+          {field:"name",name:"姓名",width:"160"},
+          {field:"age",name:"年龄(整数)",width:"220",format:"%d"},
+          {field:"email",name:"Email",width:"220"},
+          {field:"score",name:"成绩",issum:"true",format:"%.1f",width:"100"},
+          {field:"date",name:"日期",format:"yyyy-MM-dd",width:"210"},
+          {field:"status", data:"CASE WHEN  IFNULL(status,'0') ='1' THEN '已审' ELSE '未审' END",name:"状态",width:"100"},
+        </Fields>
+        <HidFields>id</HidFields>
+        <OrderBy>id desc</OrderBy>
+        <GroupBy></GroupBy>
+        <Filter>1=1</Filter>
+        <OpenForm formPkid="id" formTitle="查看" formCmd="view" formMode="link">/test/test/add.html?id={0}&amp;cmd=modify</OpenForm>
+        <OpenForm formPkid="id" formTitle="修改" formCmd="modify" >Default.aspx?pkid={0}&amp;cmd=modify</OpenForm>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:test</OpenForm>
+    </Table>
+
+    <!-- 测试sql -->
+    <Table TitleName="测试" TableName="sys_user" TableUrl="sys_user" >
+        <Sql>select * from sys_user</Sql>
+        <FilterKey></FilterKey>
+        <OrderBy>create_time desc</OrderBy>
+        <Filter>1=1</Filter>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:GGGG</OpenForm>
+    </Table>
+
+    <Table TitleName="测试" TableName="plc_data_all" TableUrl="plc_data_day" TableType="bstable">
+        <Fields>
+          {"field":"id","name":"ID"},
+          {"field":"station_id","name":"厂站ID"},
+          {"field":"quota_key","name":"数据项"},
+          {"field":"quota_value","name":"数值"},
+          {"field":"create_date","name":"日期",format:"yyyy-MM-dd"}
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+        <Filter>1=1</Filter>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:plc_data_all</OpenForm>
+    </Table>
+
+    <Table TitleName="公司资料" TableName="v_company_doc" TableUrl="v_company_doc" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"doc_type","name":""},
+            {"field":"filepath","name":"filepath"},
+            {"field":"create_date","name":"create_date"},
+            {"field":"rec_company","name":"来文单位"},
+            {"field":"rec_date","name":"来文日期",format:"yyyy-MM-dd"},
+            {"field":"name","name":"名称"},
+            {"field":"filename","name":"文件名称"},
+            {"field":"pagenumber","name":"页数"},
+            {"field":"remarks","name":"备注"},
+            {"field":"create_by","name":"上传人"}
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="应急预案" TableName="v_alarm_plan" TableUrl="v_alarm_plan_1" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"filepath","name":"filepath"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"rec_company","name":"制定单位"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"rec_date","name":"制定日期",format:"yyyy-MM-dd"},
+            {"field":"name","name":"预案名称"},
+            {"field":"filename","name":"文件名称"},
+            {"field":"plc_code","name":"PLC变量"},
+            {"field":"remarks","name":"备注"},
+            {"field":"create_by","name":"上传人"},
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="应急预案库" TableName="v_emerg_plandetail" TableUrl="v_emerg_plandetail" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"filepath","name":"filepath"},
+            {"field":"plan_id","name":"plan_id"},
+            {"field":"plan_name","name":"预案名称"},
+            {"field":"rec_company","name":"制定单位"},
+            {"field":"rec_date","name":"制定日期",format:"yyyy-MM-dd"},
+            {"field":"filename","name":"文件名称"},
+            {"field":"name","name":"子预案名称"},
+            {"field":"pagenumber","name":"页数"},
+            {"field":"remarks","name":"备注"},
+            {"field":"create_by","name":"上传人"}
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="应急处理" TableName="v_alarm_deal" TableUrl="v_alarm_deal_1" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"target_id","name":"targetId"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"alarm_flag","name":"alarmFlag"},
+            {"field":"create_date","name":"应急产生", format:"yyyy-MM-dd HH:mm"},
+            {"field":"deal_date","name":"应急确认", format:"yyyy-MM-dd HH:mm"},
+            {"field":"release_date","name":"应急解除", format:"yyyy-MM-dd HH:mm"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"name","name":"预案名称"},
+            {"field":"no","name":"编号"},
+            {"field":"level","name":"等级", data:"CASE WHEN IFNULL(level,'0')='1' THEN '一级' WHEN IFNULL(level,'0')='2' THEN '二级' WHEN IFNULL(level,'0')='3' THEN '三级' END"},
+            {"field":"deal_user","name":"deal_user"}
+        </Fields>
+        <OrderBy>alarm_flag asc, create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="报警管理" TableName="v_alarm_plan" TableUrl="v_alarm_plan_2" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"filepath","name":"filepath"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"create_date","name":"日期",format:"yyyy-MM-dd HH:mm"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"name","name":"名称"},
+            {"field":"filename","name":"文件名称"},
+            {"field":"no","name":"编号"},
+            {"field":"plc_code","name":"PLC变量"},
+            {"field":"level","name":"等级", data:"CASE WHEN IFNULL(level,'0')='1' THEN '一般' WHEN IFNULL(level,'0')='2' THEN '严重' WHEN IFNULL(level,'0')='3' THEN '特别严重' END"},
+            {"field":"message","name":"消息"},
+            {"field":"create_by","name":"上传人"}
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="报警处理" TableName="v_alarm_deal" TableUrl="v_alarm_deal_2" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"target_id","name":"targetId"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"alarm_flag","name":"alarmFlag"},
+            {"field":"create_date","name":"报警产生", format:"yyyy-MM-dd HH:mm"},
+            {"field":"deal_date","name":"报警确认", format:"yyyy-MM-dd HH:mm"},
+            {"field":"release_date","name":"报警解除", format:"yyyy-MM-dd HH:mm"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"name","name":"预案名称"},
+            {"field":"alarm_msg","name":"报警消息"},
+            {"field":"level","name":"等级", data:"CASE WHEN IFNULL(level,'0')='1' THEN '一般' WHEN IFNULL(level,'0')='2' THEN '严重' WHEN IFNULL(level,'0')='3' THEN '特别严重' END"},
+            {"field":"deal_user","name":"确认人"}
+        </Fields>
+        <OrderBy>alarm_flag asc, create_date desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="设备" TableName="v_device" TableUrl="v_device" TableType="bstable">
+        <Fields>
+          {"field":"id","name":"ID"},
+          {"field":"unit_id","name":"unit_id"},
+          {"field":"device_class","name":"device_class"},
+          {"field":"pcode","name":"pcode"},
+          {"field":"name","name":"设备名"},
+          {"field":"device_no","name":"设备编号"},
+          {"field":"unit_name","name":"工艺单元名"},
+          {"field":"subflow_name","name":"工艺子流程名"},
+          {"field":"manufacturer","name":"生产厂家"},
+          {"field":"power","name":"额定功率（kW）"},
+          {"field":"buy_date","name":"购买日期"},
+          {"field":"install_addr","name":"安装地点"},
+          {"field":"device_name","name":"设备类型"},
+        </Fields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:sys_device</OpenForm>
+        <OrderBy>create_date desc,id</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="进出水参数" TableName="v_inout_quota" TableUrl="v_inout_quota" TableType="bstable">
+        <Fields>
+          {"field":"id","name":"ID"},
+          {"field":"station_name","name":"厂站名"},
+          {"field":"quota_name","name":"名称"},
+          {"field":"plc_var_name","name":"PLC变量名"},
+          {"field":"quota_type","name":"指标类型",data:"CASE WHEN IFNULL(quota_type,'0')='1' THEN '进水参数' WHEN IFNULL(quota_type,'0')='2' THEN '出水参数'WHEN IFNULL(quota_type,'0')='3' THEN '工艺参数' END"},
+          {"field":"db_address","name":"数据库地址"},
+          {"field":"standard_lower","name":"下限值"},
+          {"field":"standard_top","name":"上限值"},
+          {"field":"rec_type","name":"采集类型",data:"CASE WHEN IFNULL(rec_type,'0')='0' THEN '自动采集' WHEN IFNULL(rec_type,'0')='1' THEN '手工输入' END"},
+        </Fields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:sys_inout_quota</OpenForm>
+        <OrderBy>create_date desc,id</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="指标维护" TableName="v_quota_data" TableUrl="v_quota_data" TableType="bstable">
+        <Fields>
+          {"field":"id","name":"ID"},
+          {"field":"batch_id","name":"batch_id"},
+          {"field":"subflow_name","name":"工艺子流程名"},
+          {"field":"rec_date","name":"日期"},
+          {"field":"rec_time","name":"采样时间",data:"CASE WHEN IFNULL(rec_time,'0')='1' THEN '9:00' WHEN IFNULL(rec_time,'0')='2' THEN '13:00' WHEN IFNULL(rec_time,'0')='3' THEN '15:00' END"},
+          {"field":"create_by","name":"提交人"},
+        </Fields>
+        <OpenForm formPkid="batch_id" formTitle="删除" formCmd="delete" >p_delete:lab_quota_data</OpenForm>
+        <OrderBy>rec_date desc, rec_time desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+
+    <Table TitleName="指标详情" TableName="v_l_quota_data" TableUrl="v_l_quota_data" TableType="bstable">
+        <Fields>
+          {"field":"subflow_name","name":"工艺子流程名"},
+          {"field":"rec_date","name":"日期"},
+          {"field":"rec_time","name":"采样时间",data:"CASE WHEN IFNULL(rec_time,'0')='1' THEN '9:00' WHEN IFNULL(rec_time,'0')='2' THEN '13:00' WHEN IFNULL(rec_time,'0')='3' THEN '15:00' END"},
+          {"field":"quota_name","name":"变量名称"},
+          {"field":"standard_top","name":"上限值"},
+          {"field":"quota_value","name":"变量值"},
+          {"field":"standard_lower","name":"下限值"},
+          {"field":"create_by","name":"提交人"}
+        </Fields>
+        <OrderBy>rec_date desc, rec_time desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="检测计划" TableName="v_lab_plan" TableUrl="v_lab_plan" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"unit_id","name":"unitID"},
+            {"field":"subflow_id","name":"subflowID"},
+            {"field":"test_type","name":"test_type"},
+            {"field":"plan_no","name":"计划编号"},
+            {"field":"plan_name","name":"计划名称"},
+            {"field":"type_name","name":"检测类别名称"},
+            {"field":"plan_dept","name":"委托部门"},
+            {"field":"test_period","name":"检测周期"},
+            {"field":"period_unit","name":"周期单位"},
+            {"field":"subflow_name","name":"取样子工艺"},
+            {"field":"unit_name","name":"取样工艺单元"},
+            {"field":"plan_maker","name":"计划制定人"},
+            {"field":"planmake_date","name":"制定日期", format:"yyyy-MM-dd"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="取样时间" TableName="lab_plan_clock" TableUrl="lab_plan_clock" TableType="bstable">
+        <Fields>
+          {"field":"id","name":"ID"},
+          {"field":"plan_id","name":"planID"},
+          {"field":"clock_desc","name":"取样钟点"},
+          {"field":"sampling_count","name":"取样数量"},
+          {"field":"count_unit","name":"数量单位"},
+        </Fields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_plan_clock</OpenForm>
+        <OrderBy>clock_desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="检测项目" TableName="v_lab_plan_item" TableUrl="v_lab_plan_item" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"plan_id","name":"planID"},
+            {"field":"item_code","name":"项目代码"},
+            {"field":"item_name","name":"项目名称"},
+            {"field":"control_range","name":"指标控制范围"},
+            {"field":"control_unit","name":"指标数据单位"},
+            {"field":"standard_name","name":"标准名称"},
+            {"field":"item_variable","name":"检测变量名"},
+            {"field":"item_variable_name","name":"检测变量名称"},
+        </Fields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_plan_item</OpenForm>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="取样登记" TableName="v_lab_plan_task" TableUrl="v_lab_plan_task" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"plan_id","name":"计划ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"subflow_id","name":"子工艺ID"},
+            {"field":"unit_id","name":"工艺单元ID"},
+            {"field":"process_flag","name":"流程flag"},
+            {"field":"plan_name","name":"计划名称"},
+            {"field":"test_type","name":"类别代码"},
+            {"field":"type_name","name":"检测类别"},
+            {"field":"task_no","name":"任务编号"},
+            {"field":"task_name","name":"任务名称"},
+            {"field":"sampling_count","name":"样品数量"},
+            {"field":"subflow_name","name":"取样子工艺"},
+            {"field":"unit_name","name":"取样工艺单元"},
+            {"field":"req_clock","name":"取样要求时间"},
+            {"field":"sampling_man","name":"取样人"},
+            {"field":"sampling_date","name":"取样时间", format:"yyyy-MM-dd HH:mm"},
+            {"field":"reg_date","name":"登记时间", format:"yyyy-MM-dd HH:mm"},
+            {"field":"process_name","name":"流程名称"},
+        </Fields>
+        <HidFields>process_code</HidFields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_task</OpenForm>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+<Table TitleName="样品信息" TableName="v_lab_sample" TableUrl="lab_sample" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"sample_no","name":"样品编号"},
+   	  {"field":"task_id","name":"任务id"},
+   	  {"field":"sample_name","name":"样品名称"},
+      {"field":"sample_count","name":"领用数量"},
+      {"field":"count_unit","name":"数量单位"},
+      {"field":"unit_name","name":"取样地点"},
+      {"field":"if_reserved","name":"是否留样",data:"CASE WHEN IFNULL(if_reserved,0)=1 THEN '是' ELSE '否' END"},
+      {"field":"reg_man","name":"样品登记人"},
+      {"field":"reg_date","name":"登记时间", format:"yyyy-MM-dd"},
+      {"field":"sample_flag","name":"已登记",data:"CASE WHEN IFNULL(sample_flag,0)=1 THEN '是' ELSE '否' END"},
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_sample</OpenForm>
+    <HidFields>subflow_id,unit_id,task_id</HidFields>
+    <OrderBy>reg_date desc, id desc</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+<Table TitleName="结果信息" TableName="v_lab_sample" TableUrl="lab_sample" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"sample_no","name":"样品编号"},
+   	  {"field":"sample_name","name":"样品名称"},
+      {"field":"sample_count","name":"领用数量"},
+      {"field":"count_unit","name":"数量单位"},
+      {"field":"unit_name","name":"取样地点"},
+      {"field":"if_reserved","name":"是否留样",data:"CASE WHEN IFNULL(if_reserved,0)=1 THEN '是' ELSE '否' END"},
+      {"field":"reg_man","name":"样品登记人"},
+      {"field":"reg_date","name":"登记时间", format:"yyyy-MM-dd"},
+      {"field":"sample_flag","name":"已登记",data:"CASE WHEN IFNULL(sample_flag,0)=1 THEN '是' ELSE '否' END"},
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_sample</OpenForm>
+    <HidFields>subflow_id,unit_id,task_id</HidFields>
+    <OrderBy>reg_date desc, id desc</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+<!-- 
+<Table TitleName="检测类别" TableName="lab_test_type" TableUrl="v_lab_test_type" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"type_code","name":"类别代码"},
+      {"field":"type_name","name":"类别名称"},
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_test_type</OpenForm>
+    <OrderBy>type_code</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+ -->
+
+<Table TitleName="取样钟点" TableName="lab_sampling_clock" TableUrl="lab_sampling_clock" TableType="bstable">
+	<Fields>
+   		{"field":"id","name":"ID"},
+      	{"field":"clock_desc","name":"取样钟点"}
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_sampling_clock</OpenForm>
+    <OrderBy>clock_desc</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+
+<Table TitleName="检测项目" TableName="lab_item" TableUrl="lab_item" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"item_code","name":"项目代码"},
+   	  {"field":"item_name","name":"项目名称"},
+      {"field":"standard_name","name":"标准名称"},
+      {"field":"standard_no","name":"标准编号"},
+      {"field":"standard_type","name":"标准类别"},
+      {"field":"instruments","name":"主要检测仪器"},
+      {"field":"remarks","name":"说明"}
+    </Fields>
+    <OrderBy>id desc</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+<Table TitleName="结果信息审核" TableName="v_lab_sample_item" TableUrl="v_lab_sample_item" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"sample_no","name":"样品编号"},
+   	  {"field":"item_code","name":"检测项目代码"},
+      {"field":"item_name","name":"检测项目名称"},
+      {"field":"standard_name","name":"检测标准"},
+      {"field":"control_range","name":"指标控制范围"},
+      {"field":"test_result","name":"检测值"},
+      {"field":"control_unit","name":"单位"},
+      {"field":"check_man","name":"审核人"},
+      {"field":"check_date","name":"审核时间",format:"yyyy-MM-dd"},
+      {"field":"check_result","name":"审核结果"},
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_sample</OpenForm>
+    <HidFields>task_id</HidFields>
+    <OrderBy>id</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+
+<Table TitleName="流程查询" TableName="v_lab_process_step" TableUrl="v_lab_process_step" TableType="bstable">
+    <Fields>
+   	  {"field":"task_id","name":"ID"},
+   	  {"field":"process_name","name":"流程名称"},
+   	  {"field":"operator","name":"操作人"},
+      {"field":"operate_date","name":"操作时间", format:"yyyy-MM-dd HH:mm:ss"},
+      {"field":"task_no","name":"任务编号"},
+      {"field":"type_name","name":"检测类别"},
+      {"field":"plan_name","name":"检测计划"},
+      {"field":"unit_name","name":"取样地点"},
+      {"field":"task_name","name":"任务名称"},
+      {"field":"process_remarks","name":"备注"},
+      {"field":"sampling_date","name":"取样日期", format:"yyyy-MM-dd HH:mm:ss"}
+    </Fields>
+    <OrderBy>id desc</OrderBy>
+    <Filter>@stationId</Filter>
+</Table>
+
+	<Table TitleName="设备故障" TableName="eqp_fault_class" TableUrl="eqp_fault_class" TableType="bstable">
+		<Fields>
+		  {"field":"id","name":"ID"},
+		  {"field":"class_code","name":"故障类别代码"},
+		  {"field":"class_name","name":"故障类别名称"}
+		</Fields>
+		<OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:eqp_fault_class</OpenForm>
+		<OrderBy>class_code</OrderBy>
+		<Filter>@stationId</Filter>
+	</Table>
+
+
+	<Table TitleName="保养级别" TableName="eqp_maint_level" TableUrl="eqp_maint_level" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	   	  {"field":"level_name","name":"级别名称"},
+	   	  {"field":"level_code","name":"级别代码"},
+	   	  {"field":"maint_content","name":"优先级"},
+	   	  {"field":"priority","name":"保养内容"}
+	    </Fields>
+	    <OrderBy>priority desc, level_code</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+
+	<Table TitleName="设备维修申请" TableName="v_eqp_repair_detail" TableUrl="v_eqp_repair_detail_1" TableType="bstable">
+	    <Fields>
+	   	  {"field":"id","name":"ID"},
+	   	  {"field":"repair_no","name":"维修单号"},
+	   	  {"field":"device_id","name":"设备id"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"manufacturer","name":"生产厂家"},
+	   	  {"field":"use_dept","name":"使用部门"},
+	   	  {"field":"dept_name","name":"使用部门名称"},
+	   	  {"field":"app_date","name":"申请时间",format:"yyyy-MM-dd"},
+	      <!-- {"field":"lastmaint_date","name":"上次维修时间"}, -->
+	      {"field":"planned_date","name":"计划维修时间", format:"yyyy-MM-dd"},
+	      {"field":"app_dept","name":"申请部门"},
+	      {"field":"fault_desc","name":"故障描述"},
+	      {"field":"class_code","name":"故障类别代码"},
+	      {"field":"class_name","name":"故障类别"},
+          <!-- {"field":"intr_maint",data:"CASE WHEN  IFNULL(intr_maint,0) =1 THEN '是' ELSE '否' END","name":"内部维修标识"}, -->
+	      <!-- {"field":"ext_maint",data:"CASE WHEN  IFNULL(ext_maint,0) =1 THEN '是' ELSE '否' END","name":"外部维修标识"}, -->
+	      {"field":"check_flag","name":"维修申请审批标识"},
+	      {"field":"process_status","name":"审批状态"},
+	      {"field":"name","name":"申请人名字"},
+	      {"field":"create_by","name":"申请人"},
+	      {"field":"app_deptname","name":"申请部门名称"},
+	      <!-- {"field":"maint_deptname","name":"维修部门名称"} -->
+	      
+	    </Fields>
+	    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:eqp_repair</OpenForm>
+	    <HidFields>id</HidFields>
+	    <OrderBy>repair_no desc, id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+	
+	<Table TitleName="设备维修" TableName="v_eqp_repair_detail" TableUrl="v_eqp_repair_detail_2" TableType="bstable">
+	    <Fields>
+	   	  {"field":"id","name":"ID"},
+	   	  {"field":"repair_no","name":"维修单号"},
+	   	  {"field":"device_id","name":"设备id"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"manufacturer","name":"生产厂家"},
+	   	  {"field":"use_dept","name":"使用部门"},
+	   	  {"field":"dept_name","name":"使用部门名称"},
+	   	  {"field":"app_date","name":"申请时间",format:"yyyy-MM-dd"},
+	      <!-- {"field":"lastmaint_date","name":"上次维修时间"}, -->
+	      {"field":"planned_date","name":"计划维修时间", format:"yyyy-MM-dd"},
+	      {"field":"maint_date","name":"维修开始时间",format:"yyyy-MM-dd"},
+	      {"field":"finish_date","name":"维修完成时间",format:"yyyy-MM-dd"},
+	      {"field":"maint_dept","name":"维修部门"},
+	      {"field":"app_dept","name":"申请部门"},
+	      {"field":"maint_worker","name":"维修人"},
+	      {"field":"maint_ent","name":"维修企业"},
+	      {"field":"stop_time","name":"停机时长"},
+	      {"field":"maint_fee","name":"维修费用"},
+	      {"field":"maint_remarks","name":"维修说明"},
+	      {"field":"fault_desc","name":"故障描述"},
+	      {"field":"class_code","name":"故障类别代码"},
+	      {"field":"class_name","name":"故障类别"},
+	      {"field":"intr_maint",data:"CASE WHEN  IFNULL(intr_maint,0) =1 THEN '是' ELSE '否' END","name":"内部维修标识"},
+	      {"field":"ext_maint",data:"CASE WHEN  IFNULL(ext_maint,0) =1 THEN '是' ELSE '否' END","name":"外部维修标识"},
+	      {"field":"check_flag","name":"维修申请审批标识"},
+	      {"field":"process_status","name":"审批状态"},
+	      {"field":"opt_flag","name":"维修状态标识",data:"CASE WHEN  IFNULL(opt_flag,0) =1 THEN '维修中' WHEN IFNULL(opt_flag,0)=2 THEN '维修完成' WHEN IFNULL(opt_flag,0)=0 THEN '维修申请' END"},
+	      {"field":"name","name":"申请人名字"},
+	      {"field":"create_by","name":"申请人"},
+	      {"field":"app_deptname","name":"申请部门名称"},
+	      {"field":"maint_deptname","name":"维修部门名称"}
+	    </Fields>
+	    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:eqp_repair</OpenForm>
+	    <HidFields>id</HidFields>
+	    <OrderBy>repair_no desc, id desc</OrderBy>
+	    <Filter>@stationId and IFNULL(opt_flag,0)>0</Filter>
+	</Table>
+	
+		<Table TitleName="设备保养申请列表" TableName="v_eqp_maint_detail" TableUrl="v_eqp_maint" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	   	  {"field":"maint_no","name":"保养单号"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"use_dept","name":"使用部门代码"},
+	   	  {"field":"app_dept","name":"申请部门"},
+	   	  <!-- {"field":"last_maint_date","name":"上次保养时间"}, -->
+	      {"field":"planned_maint_date","name":"计划保养时间", format:"yyyy-MM-dd"},
+	   	  {"field":"maint_level_code","name":"保养级别"},
+	   	  {"field":"app_date","name":"保养申请时间",format:"yyyy-MM-dd"},
+	   	  {"field":"finish_date","name":"保养完成时间",format:"yyyy-MM-dd"},
+	   	  {"field":"maint_time","name":"保养时间间隔"},
+	   	  {"field":"maint_dept","name":"保养部门"},
+	   	  {"field":"maint_worker","name":"保养人"},
+	   	  {"field":"maint_part","name":"保养部位"},
+	   	  {"field":"maint_content","name":"保养内容"},
+	   	  {"field":"maint_remarks","name":"保养说明"},
+	      {"field":"opt_flag",data:"CASE WHEN  IFNULL(opt_flag,0) =0 THEN '申请' WHEN  IFNULL(opt_flag,0) =1 THEN '保养中' WHEN IFNULL(opt_flag,0)=2 THEN '保养完成' END","name":"流程状态"},
+	      {"field":"check_flag",data:"CASE WHEN  IFNULL(check_flag,0) =0 THEN '未提交审批' WHEN  IFNULL(check_flag,0) =1 THEN '审批流程中' WHEN IFNULL(check_flag,0)=2 THEN '审批完成' END","name":"审批标识",type:"hidden"},
+	   	  {"field":"process_status","name":"审批状态"},
+	   	  {"field":"maint_date","name":"保养开始时间"},
+	   	  {"field":"use_dept_name","name":"使用部门"},
+	      {"field":"app_dept_name","name":"申请部门"},
+	      {"field":"maint_dept_name","name":"保养部门"},
+	      {"field":"maint_level_name","name":"保养级别"},
+	      {"field":"applicant_name","name":"申请人"},
+	      {"field":"source_type",data:"CASE WHEN  IFNULL(source_type,0) =0 THEN '系统申请' WHEN  IFNULL(source_type,0) =1 THEN '人工申请' END","name":"申请方式"},
+	    </Fields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+	
+	<Table TitleName="设备保养内容列表" TableName="v_eqp_maint_detail" TableUrl="v_eqp_maint_2" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	   	  {"field":"maint_no","name":"保养单号"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"use_dept","name":"使用部门代码"},
+	   	  {"field":"app_dept","name":"申请部门"},
+	   	  <!-- {"field":"last_maint_date","name":"上次保养时间"}, -->
+	      {"field":"planned_maint_date","name":"计划保养时间", format:"yyyy-MM-dd"},
+	   	  {"field":"maint_level_code","name":"保养级别"},
+	   	  {"field":"app_date","name":"保养申请时间",format:"yyyy-MM-dd"},
+	   	  {"field":"finish_date","name":"保养完成时间",format:"yyyy-MM-dd"},
+	   	  {"field":"maint_time","name":"保养时间间隔"},
+	   	  {"field":"maint_dept","name":"保养部门代码"},
+	   	  {"field":"maint_worker","name":"保养人"},
+	   	  {"field":"maint_fee","name":"保养费用"},
+	   	  {"field":"maint_part","name":"保养部位"},
+	   	  {"field":"maint_content","name":"保养内容"},
+	   	  {"field":"maint_remarks","name":"保养说明"},
+	      {"field":"opt_flag",data:"CASE WHEN  IFNULL(opt_flag,0) =0 THEN '申请' WHEN  IFNULL(opt_flag,0) =1 THEN '保养中' WHEN IFNULL(opt_flag,0)=2 THEN '保养完成' END","name":"流程状态"},
+	      {"field":"check_flag",data:"CASE WHEN  IFNULL(check_flag,0) =0 THEN '编辑' WHEN  IFNULL(check_flag,0) =1 THEN '审批中' WHEN IFNULL(check_flag,0)=2 THEN '审批完成' END","name":"审批标识",type:"hidden"},
+	      {"field":"maint_date","name":"保养开始时间",format:"yyyy-MM-dd"},
+	      {"field":"process_status","name":"审批状态"},
+	      {"field":"use_dept_name","name":"使用部门"},
+	      {"field":"app_dept_name","name":"申请部门"},
+	      {"field":"maint_dept_name","name":"保养部门"},
+	      {"field":"maint_level_name","name":"保养级别"},
+	      {"field":"applicant_name","name":"申请人"}
+	    </Fields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId and IFNULL(opt_flag,0)>0</Filter>
+	</Table>
+	
+		<Table TitleName="设备保养提醒列表" TableName="v_eqp_maint_alert" TableUrl="v_eqp_maint_alert" TableType="bstable">
+	    <Fields>
+	      {"field":"device_id","name":"设备id"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"eqp_status",data:"CASE WHEN  IFNULL(eqp_status,0) =1 THEN '在用' WHEN  IFNULL(eqp_status,0) =2 THEN '保养' WHEN IFNULL(eqp_status,0)=3 THEN '维修' END","name":"设备状态"},
+	   	  {"field":"maint_level_name","name":"保养级别"},
+	   	  {"field":"total_runtime","name":"累积运行时间"},
+	   	  {"field":"run_time","name":"实际运行时间"},
+	   	  {"field":"maint_req","name":"保养要求"},
+	   	  {"field":"maint_cycle","name":"保养周期"},
+	   	  {"field":"finish_date","name":"上次保养时间",format:"yyyy-MM-dd"},
+	      {"field":"use_dept_name","name":"使用部门"}
+	    </Fields>
+	    <OrderBy>device_id desc</OrderBy>
+	    <Filter>@stationId and IFNULL(eqp_status,0)=1</Filter>
+	</Table>
+	
+	<Table TitleName="设备采购申请" TableName="v_eqp_pur_app" TableUrl="v_eqp_pur_app" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	      {"field":"inv_flag","name":"入库标志"},
+	   	  {"field":"pur_no","name":"采购单号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"subclass_code","name":"类别代码"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"pur_count","name":"购买数量"},
+	   	  {"field":"pur_unit","name":"计量单位"},
+	   	  {"field":"app_reason","name":"申请原因"},
+	   	  {"field":"supplier","name":"供应商"},
+	   	  {"field":"manufacturer","name":"生产厂家"},
+	   	  {"field":"arrive_date","name":"到货时间",format:"yyyy-MM-dd"},
+	   	  {"field":"app_date","name":"申请时间",format:"yyyy-MM-dd"},
+	   	  {"field":"app_dept_name","name":"申请部门"},
+	   	  {"field":"app_dept","name":"申请部门代码"},
+	   	  {"field":"check_flag","name":"审批进度"},
+	      {"field":"inputer_name","name":"申请人"},
+	      {"field":"inputer","name":"申请人id"},
+	      {"field":"table_name","name":"表名"},
+	      {"field":"subclass_name","name":"类别名称"},
+	   	  {"field":"process_status","name":"流程状态"}
+	    </Fields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+
+	<Table TitleName="设备报废申请" TableName="v_eqp_scrap" TableUrl="v_eqp_scrap" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	   	  {"field":"scrap_no","name":"报废单号"},
+	   	  {"field":"eqp_no","name":"设备编号"},
+	   	  {"field":"eqp_model","name":"规格型号"},
+	   	  {"field":"eqp_name","name":"设备名称"},
+	   	  {"field":"dept_name","name":"使用部门"},
+	   	  {"field":"use_dept","name":"使用部门"},
+	   	  {"field":"manufacturer","name":"生产厂家"},
+	   	  {"field":"manuf_date","name":"出厂日期",format:"yyyy-MM-dd"},
+	   	  {"field":"use_date","name":"使用日期",format:"yyyy-MM-dd"},
+	   	  {"field":"used_year","name":"已使用年限"},
+	   	  {"field":"net_worth","name":"净值"},
+	   	  {"field":"app_date","name":"申请时间",format:"yyyy-MM-dd"},
+	   	  {"field":"check_flag","name":"审批进度"},
+	      {"field":"applicant","name":"申请人ID"},
+	      {"field":"applicant_name","name":"申请人"},
+	   	  {"field":"process_status","name":"流程状态"},
+	   	  {"field":"scrap_date","name":"报废日期",format:"yyyy-MM-dd"}
+	    </Fields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+
+    <Table TitleName="设备清单" TableName="v_device_eqp" TableUrl="v_device_eqp_1" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"文件ID"},
+            {"field":"eqp_no","name":"设备编号"},
+            {"field":"pur_no","name":"采购单号"},
+            {"field":"eqp_name","name":"设备名称"},
+            {"field":"eqp_status","name":"设备状态代码"},
+            {"field":"status_name","name":"设备状态"},
+            {"field":"subclass_code","name":"小类代码"},
+            {"field":"subclass_name","name":"小类名称"},
+            {"field":"eqp_model","name":"规格型号"},
+            {"field":"manufacturer","name":"生产厂家"},
+            {"field":"eqp_count","name":"设备数量"},
+            {"field":"pur_date","name":"购买日期",format:"yyyy-MM-dd"},
+            {"field":"location","name":"安装地点"},
+            {"field":"use_dept","name":"使用部门代码"},
+            {"field":"dept_name","name":"使用部门"},
+            {"field":"unit_id","name":"工艺单元ID"},
+            {"field":"unit_name","name":"工艺单元名"},
+            {"field":"subflow_name","name":"工艺子流程名"},
+        </Fields>
+        <OrderBy>use_date desc, id desc</OrderBy>
+        <Filter>@stationId and IFNULL(eqp_status,0)>0</Filter>
+    </Table>
+    
+    <Table TitleName="设备查询" TableName="v_eqp_list_detail" TableUrl="v_eqp_list_detail_1" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"eqp_no","name":"设备编号"},
+            {"field":"eqp_name","name":"设备名称"},
+            {"field":"eqp_model","name":"规格型号"},
+            {"field":"use_dept","name":"使用部门"},
+            {"field":"class_code","name":"设备类别"},
+            {"field":"manufacturer","name":"生产厂家"},
+            {"field":"location","name":"安装地点"},
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+	<Table TitleName="审批表" TableName="eqp_process_def" TableUrl="eqp_process_def" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	   	  {"field":"name","name":"流程名称"},
+	   	  {"field":"remarks","name":"备注"},
+	   	  {"field":"table_name","name":"表单名"}
+	    </Fields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+	
+	<Table TitleName="审批流程表" TableName="eqp_process_step" TableUrl="eqp_process_step" TableType="bstable">
+	    <Fields>
+	      {"field":"id","name":"ID"},
+	      {"field":"process_def_id","name":"流程ID"},
+	      {"field":"process_code","name":"流程代码"},
+	   	  {"field":"process_name","name":"流程名称"},
+	   	  {"field":"process_status","name":"当前状态"},
+	   	  {"field":"check_users_name","name":"审核人"},
+	   	  {"field":"check_sql","name":"执行sql"},
+	   	  {"field":"remarks","name":"备注"},
+	   	  {"field":"table_name","name":"表单名"},
+	   	  {"field":"if_last","name":"是否最后流程"},
+	   	  {"field":"process_class","name":"流程类"}
+	    </Fields>
+	    <OrderBy>process_code</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+	
+	<Table TitleName="部门设置" TableName="sys_dept" TableUrl="sys_dept" TableType="bstable">
+	    <Fields>
+	   	  {"field":"id","name":"ID"},
+	   	  {"field":"dept_no","name":"部门代码"},
+	   	  {"field":"dept_name","name":"部门名称"},
+	   	  {"field":"dept_level","name":"部门等级"},
+	   	  {"field":"parent_dept_no","name":"上级部门ID"},
+	   	  {"field":"if_top","name":"是否顶级"},
+	   	  {"field":"dept_manager","name":"部门主管"},
+	   	  {"field":"remarks","name":"备注"}	      
+	    </Fields>
+	    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:sys_dept</OpenForm>
+	    <HidFields>id</HidFields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+	
+	<Table TitleName="类别设置" TableName="sys_code" TableUrl="sys_code" TableType="bstable">
+	    <Fields>
+	   	  {"field":"id","name":"ID"},
+	   	  {"field":"code","name":"类别代码"},
+	   	  {"field":"name","name":"类别名称"},
+	   	  {"field":"level","name":"类别等级"},
+	   	  {"field":"pcode","name":"上级类别代码"},
+	   	  {"field":"if_top","name":"是否顶级"},
+	   	  {"field":"remarks","name":"备注"}	      
+	    </Fields>
+	    <HidFields>id</HidFields>
+	    <OrderBy>id desc</OrderBy>
+	    <Filter>@stationId</Filter>
+	</Table>
+
+    <Table TitleName="库存管理" TableName="v_device_eqp" TableUrl="v_device_eqp" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"eqp_status","name":"设备状态代码"},
+            {"field":"subclass_code","name":"小类代码"},
+            {"field":"eqp_no","name":"设备编号"},
+            {"field":"pur_no","name":"采购单号"},
+            {"field":"eqp_name","name":"设备名称"},
+            {"field":"eqp_model","name":"规格型号"},
+            {"field":"subclass_name","name":"小类代码"},
+            {"field":"manufacturer","name":"生产厂家"},
+            {"field":"status_name","name":"设备状态"},
+            {"field":"eqp_count","name":"设备数量"},
+            {"field":"pur_date","name":"购买日期",format:"yyyy-MM-dd"}
+        </Fields>
+        <OrderBy>pur_date desc, id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    
+    <Table TitleName="审核日志" TableName="eqp_process_log" TableUrl="eqp_process_log" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"check_user","name":"处理人"},
+            {"field":"check_date","name":"处理时间",format:"yyyy-MM-dd HH:mm"},
+            {"field":"check_result","name":"操作"},
+            {"field":"check_remarks","name":"意见(备注)"},
+            {"field":"process_status","name":"状态"},
+        </Fields>
+        <HidFields>track_id,track_no,table_name</HidFields>
+        <OrderBy>check_date desc, id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+    <Table TitleName="保养要求" TableName="v_eqp_maint_req" TableUrl="v_eqp_maint_req" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"eqp_no","name":"设备编号"},
+            <!--{"field":"maint_level_code","name":"保养级别"},-->
+            {"field":"level_name","name":"保养级别"},
+            {"field":"maint_cycle","name":"保养周期"},
+            {"field":"total_runtime","name":"累计运行时间"},
+            {"field":"maint_req","name":"保养要求"},
+        </Fields>
+        <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:eqp_maint_req</OpenForm>
+        <OrderBy>priority </OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+    
+    <Table TitleName="设备清单" TableName="v_device_eqp" TableUrl="v_device_eqp_2" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"eqp_no","name":"设备编号"},
+            {"field":"eqp_name","name":"设备名称"},
+            {"field":"eqp_model","name":"规格型号"},
+            {"field":"unit_name","name":"工艺单元名"},
+            {"field":"run_time","name":"累计运行时间"},
+            {"field":"after_maint_time","name":"保养后运行时间"},
+            {"field":"after_repair_time","name":"维修后运行时间"},
+            {"field":"run_cycle","name":"轮换时间"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+    
+    <Table TitleName="组别" TableName="sms_usergroup" TableUrl="sms_usergroup" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"group_name","name":"组名"},
+            {"field":"group_class","name":"组别类型",data:"CASE WHEN  IFNULL(group_class,0) =1 THEN '应急预案' WHEN  IFNULL(group_class,0) =2 THEN '系统报警' WHEN IFNULL(group_class,0)=3 THEN '其他' END"},
+            {"field":"message_class","name":"报警类别",data:"CASE WHEN  IFNULL(message_class,0) =1 THEN '工艺' WHEN  IFNULL(message_class,0) =2 THEN '设备' WHEN IFNULL(message_class,0)=3 THEN '事件' END"},
+            {"field":"message_level","name":"报警等级",data:"CASE WHEN  IFNULL(message_level,0) =1 THEN '一般' WHEN  IFNULL(message_level,0) =2 THEN '严重' WHEN IFNULL(message_level,0)=3 THEN '非常严重' END"},
+            {"field":"remark","name":"备注"},
+            {"field":"subflow_name","name":"子工艺name"},
+            {"field":"sms_model","name":"发送类别",data:"CASE WHEN  IFNULL(sms_model,0) =1 THEN '自动发送' WHEN  IFNULL(sms_model,0) =0 THEN '手动发送' END"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+    
+    <Table TitleName="员工" TableName="v_sys_emp" TableUrl="v_sys_emp" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"name","name":"姓名"},
+            {"field":"job","name":"职务"},
+            {"field":"sex","name":"性别"},
+            {"field":"birthday","name":"生日", format:"yyyy-MM-dd"},
+            {"field":"mobile","name":"手机"},
+            {"field":"email","name":"Email"},
+            {"field":"remark","name":"备注"},
+            {"field":"dept_id","name":"部门id"},
+            {"field":"dept","name":"部门"},
+            {"field":"sort","name":"排序"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+
+	<Table TitleName="消息发送" TableName="sms_send" TableUrl="sms_send" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"title","name":"标题"},
+            {"field":"usergroup_id","name":"用户组id"},
+            {"field":"usergroup_name","name":"用户组名称"},
+            {"field":"user_name_list","name":"发送对象"},
+            {"field":"user_id_list","name":"发送对象id"},
+            {"field":"message","name":"内容"},
+            {"field":"send_date","name":"发送时间",format:"yyyy-MM-dd HH:mm:ss"},
+            {"field":"send_type","name":"类型"},
+            {"field":"remark","name":"备注"},
+            {"field":"send_type","name":"类型"},
+            <!-- {"field":"if_send","name":"发送状态",data:"CASE WHEN  IFNULL(if_send,0) =1 THEN '已发送' WHEN  IFNULL(if_send,0) =0 THEN '未发送' END"} -->
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table> 
+    
+    <Table TitleName="发送报表" TableName="v_sms_send_detail" TableUrl="v_sms_send_detail" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"send_id","name":"消息ID"},
+            {"field":"usergroup_id","name":"用户组id"},
+            {"field":"usergroup_name","name":"用户组名称"},
+            {"field":"message","name":"内容"},
+            {"field":"mobile","name":"手机号码"},
+            {"field":"name","name":"姓名"},
+            {"field":"send_date","name":"发送时间",format:"yyyy-MM-dd HH:mm:ss"},
+            {"field":"user_id","name":"用户ID"},
+            {"field":"send_error","name":"失败信息"},
+            {"field":"send_status","name":"发送状态",data:"CASE WHEN  IFNULL(send_status,0) =0 THEN '未发送' WHEN  IFNULL(send_status,0) =1 THEN '发送成功' WHEN  IFNULL(send_status,0) =2 THEN '发送失败' END"},
+            {"field":"send_num","name":"发送次数"},
+            {"field":"select_flag","name":"选择标识"},
+            {"field":"deal_date","name":"发送处理日期",format:"yyyy-MM-dd HH:mm:ss"},
+            {"field":"title","name":"标题"},
+            {"field":"send_type","name":"类型",data:"CASE WHEN  IFNULL(send_type,0) =1 THEN '单用户' WHEN  IFNULL(send_type,0) =0 THEN '组' END"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter>@stationId</Filter>
+    </Table>
+    
+    <Table TitleName="账号添加" TableName="sms_company" TableUrl="sms_company" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"company_name","name":"单位名称"},
+            {"field":"user_name","name":"用户名"},
+            {"field":"user_pwd","name":"密码"},
+            {"field":"sys_name","name":"系统名称"},
+            {"field":"sms_count","name":"短信条数"},
+            {"field":"api_key","name":"企业唯一标识号"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter></Filter>
+    </Table> 
+    
+    <Table TitleName="通道添加" TableName="sms_channel" TableUrl="sms_channel" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"channel_name","name":"通道名称"},
+            {"field":"remark","name":"备注"}
+        </Fields>
+        <OrderBy>id desc</OrderBy>
+        <Filter></Filter>
+    </Table> 
+    
+    
+      <Table TitleName="应急处理" TableName="v_alarm_deal" TableUrl="v_alarm_deal_test" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"target_id","name":"targetId"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"alarm_flag","name":"alarmFlag"},
+            {"field":"create_date","name":"应急产生", format:"yyyy-MM-dd HH:mm"},
+            {"field":"deal_date","name":"应急确认", format:"yyyy-MM-dd HH:mm"},
+            {"field":"release_date","name":"应急解除", format:"yyyy-MM-dd HH:mm"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"name","name":"预案名称"},
+            {"field":"no","name":"编号"},
+            {"field":"level","name":"等级", data:"CASE WHEN IFNULL(level,'0')='1' THEN '一级' WHEN IFNULL(level,'0')='2' THEN '二级' WHEN IFNULL(level,'0')='3' THEN '三级' END"},
+            {"field":"deal_user","name":"deal_user"}
+        </Fields>
+        <OrderBy>alarm_flag asc, create_date desc</OrderBy>
+    </Table>
+
+    <Table TitleName="报警管理" TableName="v_alarm_plan" TableUrl="v_alarm_plan_test" TableType="bstable">
+        <Fields>
+            {"field":"id","name":"ID"},
+            {"field":"fileid","name":"fileid"},
+            {"field":"filepath","name":"filepath"},
+            {"field":"target_type","name":"target_type"},
+            {"field":"create_date","name":"日期",format:"yyyy-MM-dd HH:mm"},
+            {"field":"type","name":"类别", data:"CASE WHEN IFNULL(type,'0')='1' THEN '工艺' WHEN IFNULL(type,'0')='2' THEN '设备' WHEN IFNULL(type,'0')='3' THEN '事件' END"},
+            {"field":"name","name":"名称"},
+            {"field":"filename","name":"文件名称"},
+            {"field":"no","name":"编号"},
+            {"field":"plc_code","name":"PLC变量"},
+            {"field":"level","name":"等级", data:"CASE WHEN IFNULL(level,'0')='1' THEN '一般' WHEN IFNULL(level,'0')='2' THEN '严重' WHEN IFNULL(level,'0')='3' THEN '特别严重' END"},
+            {"field":"message","name":"消息"},
+            {"field":"create_by","name":"上传人"}
+        </Fields>
+        <OrderBy>create_date desc</OrderBy>
+    </Table>
+    
+    <Table TitleName="结果信息审核" TableName="v_lab_sample_item" TableUrl="v_lab_sample_item_test" TableType="bstable">
+    <Fields>
+   	  {"field":"id","name":"ID"},
+   	  {"field":"sample_no","name":"样品编号"},
+   	  {"field":"item_code","name":"检测项目代码"},
+      {"field":"item_name","name":"检测项目名称"},
+      {"field":"standard_name","name":"检测标准"},
+      {"field":"control_range","name":"指标控制范围"},
+      {"field":"test_result","name":"检测值"},
+      {"field":"control_unit","name":"单位"},
+      {"field":"check_man","name":"审核人"},
+      {"field":"check_date","name":"审核时间",format:"yyyy-MM-dd"},
+      {"field":"check_result","name":"审核结果"},
+    </Fields>
+    <OpenForm formPkid="id" formTitle="删除" formCmd="delete" >p_delete:lab_sample</OpenForm>
+    <HidFields>task_id</HidFields>
+    <OrderBy>id</OrderBy>
+</Table>
+
+</Tables>

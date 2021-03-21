@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.oschain.fastchaindb.cert.dao.ProofFileMapper">
+
+    <select id="fileSizeAdditionalRecord" resultType="com.oschain.fastchaindb.system.model.Console">
+select v.month,ifnull(b.count,0)  count from (
+                                                 SELECT DATE_FORMAT(CURDATE(), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 1 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 2 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 3 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 4 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 5 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 6 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 7 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 8 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 9 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 10 MONTH), '%Y-%m') AS 'month'
+                                                 UNION SELECT DATE_FORMAT((CURDATE() - INTERVAL 11 MONTH), '%Y-%m') AS 'month'
+                                             ) v
+                                                 left join
+                                             (select
+                                                  left(create_time,7) as 'month',sum(file_size)/1024/1024 as count
+                                              from proof_file as a
+                                              where DATE_FORMAT(a.create_time,'%Y-%m')>
+                                                    DATE_FORMAT(date_sub(curdate(), interval 12 month),'%Y-%m')
+                                              GROUP BY month
+                                             )b
+                                             on v.month = b.month group by v.month
+    </select>
+
+
+    <select id="sumFileSize" resultType="BigInteger">
+        select sum(file_size) from proof_file
+        where delete_flag = 0
+    </select>
+
+
+    <update id="updateByFileIds"  parameterType="java.util.Map">
+        UPDATE proof_file set proof_sign_id=#{proofSignId},delete_flag=0``
+        WHERE file_id IN
+        <foreach collection="fileIds" open="(" close=")" separator="," item="fileId">
+            #{fileId}
+        </foreach>
+    </update>
+
+
+    <select id="selectByFileIds"  parameterType="java.util.Map" resultType="com.oschain.fastchaindb.cert.model.ProofFile" >
+        select id,file_id,file_hash from proof_file
+        WHERE file_id IN
+        <foreach collection="fileIds" open="(" close=")" separator="," item="fileId">
+            #{fileId}
+        </foreach>
+    </select>
+
+
+    <update id="updateByIds"  parameterType="java.util.Map">
+        UPDATE proof_file set proof_sign_id=#{proofSignId},last_check_time=now(),
+        transaction_id=
+        <foreach collection="listProofFile" item="item" index="index" open=" case id " close=" end, " separator="">
+            WHEN
+            #{item.id}
+            THEN
+            #{item.transactionId}
+        </foreach>
+        delete_flag=0
+        WHERE id IN
+        <foreach collection="listProofFile" item="item" index="index" open="(" close=")" separator=",">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <update id="updateLastCheckTimeById" >
+        UPDATE proof_file set last_check_time=#{lastCheckTime}
+        WHERE  id=#{id}
+    </update>
+
+</mapper>

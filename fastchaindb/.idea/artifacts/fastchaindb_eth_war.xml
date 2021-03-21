@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="fastchaindb-eth:war">
+    <output-path>$PROJECT_DIR$/fastchaindb-eth/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>fastchaindb-eth</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="fastchaindb-eth-2.0.2.war">
+      <element id="artifact" artifact-name="fastchaindb-eth:war exploded" />
+    </root>
+  </artifact>
+</component>
